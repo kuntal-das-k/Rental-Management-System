@@ -89,7 +89,7 @@ export const OrdersKanban: React.FC<OrdersKanbanProps> = ({
 
                     <div className="flex items-center justify-between pt-2 border-t border-slate-200/80 mt-2">
                       <span className="text-xs font-black text-slate-900">
-                        ${order.total_amount.toFixed(2)}
+                        ₹{order.total_amount.toFixed(2)}
                       </span>
 
                       {/* Quick State Action Buttons */}

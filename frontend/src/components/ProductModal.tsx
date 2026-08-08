@@ -151,7 +151,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, on
 
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block font-semibold text-slate-300 mb-1">Daily Rent ($) *</label>
+              <label className="block font-semibold text-slate-300 mb-1">Daily Rent (₹) *</label>
               <input
                 type="number"
                 required
@@ -161,7 +161,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, on
               />
             </div>
             <div>
-              <label className="block font-semibold text-slate-300 mb-1">Deposit ($)</label>
+              <label className="block font-semibold text-slate-300 mb-1">Deposit (₹)</label>
               <input
                 type="number"
                 value={formData.security_deposit_amount}
@@ -170,7 +170,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, on
               />
             </div>
             <div>
-              <label className="block font-semibold text-slate-300 mb-1">Late Fee/Day ($)</label>
+              <label className="block font-semibold text-slate-300 mb-1">Late Fee/Day (₹)</label>
               <input
                 type="number"
                 value={formData.late_fee_per_unit}

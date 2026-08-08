@@ -129,7 +129,7 @@ export const RentalsCatalogCard: React.FC<CatalogCardProps> = ({
               FROM
             </span>
             <div className="flex items-baseline gap-1 mt-0.5">
-              <span className="text-base font-extrabold text-neutral-900">${price}</span>
+              <span className="text-base font-extrabold text-neutral-900">₹{price}</span>
               <span className="text-xs text-neutral-400 font-normal">{billingCycle}</span>
             </div>
           </div>

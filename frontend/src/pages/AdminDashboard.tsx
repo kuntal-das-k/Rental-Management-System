@@ -1557,7 +1557,7 @@ export const AdminDashboard: React.FC = () => {
                     Default Late Fee Rate (Per Day)
                   </label>
                   <div className="relative max-w-xs">
-                    <span className="absolute left-3 top-2.5 text-slate-400 text-xs font-bold">$</span>
+                    <span className="absolute left-3 top-2.5 text-slate-400 text-xs font-bold">₹</span>
                     <input
                       type="number"
                       value={lateFeeRate}
@@ -1781,14 +1781,14 @@ export const AdminDashboard: React.FC = () => {
                   <div className="p-3 bg-slate-100 rounded-xl border border-slate-200 text-xs space-y-1">
                     <div className="flex justify-between font-bold text-slate-800">
                       <span>Daily Rental Rate:</span>
-                      <span className="text-slate-900">${selectedP.sales_price}/day</span>
+                      <span className="text-slate-900">₹{selectedP.sales_price}/day</span>
                     </div>
                     <div className="flex justify-between font-bold text-slate-800">
                       <span>Refundable Security Deposit:</span>
-                      <span className="text-cyan-700">${depositAmt}</span>
+                      <span className="text-cyan-700">₹{depositAmt}</span>
                     </div>
                     <p className="text-[10px] text-slate-500 mt-1">
-                      💡 On on-time return with pristine condition inspection, the entire <strong>${depositAmt} security deposit</strong> will be refunded to customer.
+                      💡 On on-time return with pristine condition inspection, the entire <strong>₹{depositAmt} security deposit</strong> will be refunded to customer.
                     </p>
                   </div>
                 );

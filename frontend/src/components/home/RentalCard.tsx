@@ -141,7 +141,7 @@ export const RentalCard: React.FC<RentalCardProps> = ({
         {/* Footer Price & Add Button */}
         <div className="pt-2 border-t border-neutral-100 flex items-center justify-between">
           <div className="flex items-baseline gap-1">
-            <span className="text-base font-extrabold text-neutral-900">${price}</span>
+            <span className="text-base font-extrabold text-neutral-900">₹{price}</span>
             <span className="text-xs text-neutral-400 font-normal">{billingCycle}</span>
           </div>
 
