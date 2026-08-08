@@ -349,12 +349,12 @@ export const VendorDashboard: React.FC = () => {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    {user?.role === 'ADMIN' && (
+                    {(user?.role === 'ADMIN' || user?.role === 'VENDOR') && (
                       <button
                         onClick={() => handleTogglePublishProduct(prod.id, prod.is_published)}
-                        className="px-2.5 py-1 text-[10px] font-bold rounded bg-slate-800 text-cyan-400 border border-slate-700"
+                        className="px-2.5 py-1 text-[10px] font-bold rounded bg-slate-800 text-cyan-400 border border-slate-700 hover:bg-slate-700"
                       >
-                        {prod.is_published ? 'Unpublish' : 'Publish (Admin)'}
+                        {prod.is_published ? 'Unpublish' : 'Publish'}
                       </button>
                     )}
                     <button

@@ -38,10 +38,17 @@ export class ProductController {
   async createProduct(req: AuthenticatedRequest, res: Response) {
     try {
       const user = req.user!;
-      const vendorId = user.role === 'VENDOR' ? user.vendorId : req.body.vendorId;
+      let vendorId = user.role === 'VENDOR' ? user.vendorId : req.body.vendorId;
+
+      if (!vendorId && user.role === 'VENDOR') {
+        const vendorRepo = await import('../config').then((m) => m.prisma.vendor.findUnique({ where: { user_id: user.userId } }));
+        if (vendorRepo) {
+          vendorId = vendorRepo.id;
+        }
+      }
 
       if (!vendorId) {
-        return res.status(400).json({ success: false, error: 'Vendor ID is required' });
+        return res.status(400).json({ success: false, error: 'Vendor profile not found or Vendor ID is required' });
       }
 
       const product = await productService.createProduct(vendorId, user.role, req.body);
