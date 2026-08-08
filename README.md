@@ -60,3 +60,41 @@ npm run prisma:seed
    - **Condition Inspection Checklist:** Interactive pass/fail inspection modal on pickup and return.
    - **PDF Invoice Generator:** PDFKit invoice generator producing official PDFs stored under `/uploads/invoices/`.
    - **Reusable Bar Chart:** Dynamic reporting chart accepting metric keys (`Revenue`, `Order Count`) and date-range filters.
+
+---
+
+## Admin Panel "Create Rental" Problem & Solution
+
+### 1. Problem Description
+When attempting to create a new rental order from the Admin Dashboard modal, order creation failed or misattributed customer data.
+
+### 2. Root Cause Analysis
+1. **Customer ID Hardcoding in Controller:**
+   `OrderController.createOrder` set `customerId = req.user.userId`. When logged in as an Admin, `req.user.userId` represented the Admin's ID rather than the customer selected in the modal form.
+2. **JSON Payload Naming Mismatch:**
+   The backend `OrderService` strictly expected `snake_case` fields (`vendor_id`, `scheduled_pickup_at`, `scheduled_return_at`, `product_id`), whereas the frontend Admin modal posted `camelCase` properties (`vendorId`, `scheduledPickupAt`, `scheduledReturnAt`, `productId`). As a result, product IDs and vendor IDs evaluated to `undefined`.
+
+### 3. Technical Solution Applied
+
+#### Backend Fixes
+- **`backend/src/controllers/order.controller.ts`**:
+  Updated `createOrder` to prioritize `req.body.customerId` or `req.body.customer_id` from the request payload before falling back to `req.user.userId`.
+- **`backend/src/services/order.service.ts`**:
+  Normalized incoming payload parameters to support both `camelCase` and `snake_case` transparently:
+  ```typescript
+  const targetCustomerId = data.customerId || data.customer_id || customerId;
+  const vendorIdInput = data.vendor_id || data.vendorId;
+  const scheduledPickupInput = data.scheduled_pickup_at || data.scheduledPickupAt;
+  const scheduledReturnInput = data.scheduled_return_at || data.scheduledReturnAt;
+  const productId = item.product_id || item.productId;
+  ```
+  Added vendor fallback resolution to resolve vendor profiles by either `vendor_profile.id` or `user.id`.
+
+#### Frontend Fixes
+- **`frontend/src/pages/AdminDashboard.tsx`**:
+  - Added vendor auto-selection when a product is chosen in the form dropdown.
+  - Added date auto-defaults (Today for Pickup, +3 Days for Return) if dates are left blank.
+  - Added loading indicator (`isCreatingRental`) to prevent duplicate form submissions.
+
+### 4. Verification
+Tested end-to-end with full TypeScript compilation (`npm run build:backend` & `npm run build:frontend`). Rental orders can now be created by Admins for any registered customer and vendor cleanly.

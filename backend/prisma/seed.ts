@@ -421,6 +421,134 @@ async function main() {
     },
   });
 
+  // 13. Sample Orders & Payments for Realistic Dashboard Reporting
+  const now = new Date();
+  const todayStart = new Date(now); todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date(now); todayEnd.setHours(23, 59, 59, 999);
+  
+  const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+  const twoDaysAgo = new Date(now); twoDaysAgo.setDate(now.getDate() - 2);
+  const threeDaysAgo = new Date(now); threeDaysAgo.setDate(now.getDate() - 3);
+  const inTwoDays = new Date(now); inTwoDays.setDate(now.getDate() + 2);
+  const inFiveDays = new Date(now); inFiveDays.setDate(now.getDate() + 5);
+
+  // Order 1: Active Sales Order (Upcoming Pickup)
+  const order1 = await prisma.order.create({
+    data: {
+      customer_id: customer1.id,
+      vendor_id: vendorUser1.vendor_profile!.id,
+      state: 'SALES_ORDER',
+      scheduled_pickup_at: inTwoDays,
+      scheduled_return_at: inFiveDays,
+      total_amount: 425.00,
+      created_at: threeDaysAgo,
+      order_items: {
+        create: [
+          { product_id: prod1.id, quantity: 1, unit_price: 85.00, line_total: 425.00 }
+        ]
+      },
+      payments: {
+        create: [
+          { amount: 425.00, type: 'RENTAL', status: 'COMPLETED', method: 'CREDIT_CARD', transaction_ref: 'TXN-90123' },
+          { amount: 200.00, type: 'DEPOSIT', status: 'COMPLETED', method: 'CREDIT_CARD', transaction_ref: 'DEP-90123' }
+        ]
+      }
+    }
+  });
+
+  // Order 2: Picked Up (Due Today)
+  const order2 = await prisma.order.create({
+    data: {
+      customer_id: customer2.id,
+      vendor_id: vendorUser2.vendor_profile!.id,
+      state: 'PICKED_UP',
+      scheduled_pickup_at: twoDaysAgo,
+      scheduled_return_at: todayEnd,
+      total_amount: 225.00,
+      created_at: twoDaysAgo,
+      order_items: {
+        create: [
+          { product_id: prod3.id, quantity: 1, unit_price: 45.00, line_total: 225.00 }
+        ]
+      },
+      payments: {
+        create: [
+          { amount: 225.00, type: 'RENTAL', status: 'COMPLETED', method: 'CREDIT_CARD', transaction_ref: 'TXN-90124' },
+          { amount: 350.00, type: 'DEPOSIT', status: 'COMPLETED', method: 'CREDIT_CARD', transaction_ref: 'DEP-90124' }
+        ]
+      }
+    }
+  });
+
+  // Order 3: Picked Up (Overdue Rental)
+  const order3 = await prisma.order.create({
+    data: {
+      customer_id: customer1.id,
+      vendor_id: vendorUser1.vendor_profile!.id,
+      state: 'PICKED_UP',
+      scheduled_pickup_at: threeDaysAgo,
+      scheduled_return_at: yesterday,
+      is_late: true,
+      total_amount: 300.00,
+      created_at: threeDaysAgo,
+      order_items: {
+        create: [
+          { product_id: prod2.id, quantity: 1, unit_price: 75.00, line_total: 300.00 }
+        ]
+      },
+      payments: {
+        create: [
+          { amount: 300.00, type: 'RENTAL', status: 'COMPLETED', method: 'CREDIT_CARD', transaction_ref: 'TXN-90125' },
+          { amount: 150.00, type: 'DEPOSIT', status: 'COMPLETED', method: 'CREDIT_CARD', transaction_ref: 'DEP-90125' },
+          { amount: 45.00, type: 'LATE_FEE', status: 'COMPLETED', method: 'CREDIT_CARD', transaction_ref: 'FEE-90125' }
+        ]
+      }
+    }
+  });
+
+  // Order 4: Returned (Completed Rental)
+  const order4 = await prisma.order.create({
+    data: {
+      customer_id: customer2.id,
+      vendor_id: vendorUser1.vendor_profile!.id,
+      state: 'RETURNED',
+      scheduled_pickup_at: threeDaysAgo,
+      scheduled_return_at: yesterday,
+      actual_return_at: yesterday,
+      total_amount: 340.00,
+      created_at: threeDaysAgo,
+      order_items: {
+        create: [
+          { product_id: prod1.id, quantity: 1, unit_price: 85.00, line_total: 340.00 }
+        ]
+      },
+      payments: {
+        create: [
+          { amount: 340.00, type: 'RENTAL', status: 'COMPLETED', method: 'CREDIT_CARD', transaction_ref: 'TXN-90126' }
+        ]
+      }
+    }
+  });
+
+  // Order 5: Quotation (Sent)
+  const order5 = await prisma.order.create({
+    data: {
+      customer_id: customer1.id,
+      vendor_id: vendorUser2.vendor_profile!.id,
+      state: 'QUOTATION',
+      scheduled_pickup_at: inTwoDays,
+      scheduled_return_at: inFiveDays,
+      total_amount: 180.00,
+      created_at: now,
+      order_items: {
+        create: [
+          { product_id: prod3.id, quantity: 1, unit_price: 45.00, line_total: 180.00 }
+        ]
+      }
+    }
+  });
+
+  console.log('✅ Sample orders & payments created successfully.');
   console.log('🎉 Seed process finished cleanly!');
 }
 

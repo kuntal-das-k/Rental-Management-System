@@ -45,7 +45,7 @@ export class OrderController {
 
   async createOrder(req: AuthenticatedRequest, res: Response) {
     try {
-      const customerId = req.user!.userId;
+      const customerId = req.body.customerId || req.body.customer_id || req.user!.userId;
       const order = await orderService.createOrder(customerId, req.body);
       return res.status(201).json({ success: true, data: order });
     } catch (err: any) {

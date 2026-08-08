@@ -17,41 +17,34 @@ export class OrderService {
     return order;
   }
 
-  async createOrder(customerId: string, data: {
-    vendor_id: string;
-    scheduled_pickup_at: string;
-    scheduled_return_at: string;
-    pickup_type?: any;
-    items: {
-      product_id: string;
-      quantity: number;
-      unit_price: number;
-      line_total: number;
-    }[];
-  }) {
+  async createOrder(customerId: string, data: any) {
     // 1. Verify customer exists in database
-    const customer = await prisma.user.findUnique({ where: { id: customerId } });
+    const targetCustomerId = data.customerId || data.customer_id || customerId;
+    const customer = await prisma.user.findUnique({ where: { id: targetCustomerId } });
     if (!customer) {
-      throw new Error('Your user session is invalid or expired. Please log out and log in again.');
+      throw new Error('Customer account not found or invalid session.');
     }
+
+    const vendorIdInput = data.vendor_id || data.vendorId;
+    const scheduledPickupInput = data.scheduled_pickup_at || data.scheduledPickupAt;
+    const scheduledReturnInput = data.scheduled_return_at || data.scheduledReturnAt;
 
     // 2. Verify vendor exists. If vendor_id is a User ID or stale, resolve valid Vendor record
-    let vendor = await prisma.vendor.findUnique({ where: { id: data.vendor_id } });
+    let vendor = vendorIdInput ? await prisma.vendor.findUnique({ where: { id: vendorIdInput } }) : null;
+    if (!vendor && vendorIdInput) {
+      vendor = await prisma.vendor.findUnique({ where: { user_id: vendorIdInput } });
+    }
     if (!vendor) {
-      const vendorByUser = await prisma.vendor.findUnique({ where: { user_id: data.vendor_id } });
-      if (vendorByUser) {
-        vendor = vendorByUser;
-      } else {
-        const firstVendor = await prisma.vendor.findFirst();
-        if (!firstVendor) throw new Error('No valid vendor found to process order.');
-        vendor = firstVendor;
-      }
+      vendor = await prisma.vendor.findFirst();
+      if (!vendor) throw new Error('No valid vendor found to process order.');
     }
 
-    // 3. Verify product IDs and fallback if stale cart data in localStorage
+    // 3. Verify product IDs and fallback if needed
     const validItems = [];
-    for (const item of data.items) {
-      let product = await prisma.product.findUnique({ where: { id: item.product_id } });
+    const rawItems = data.items || [];
+    for (const item of rawItems) {
+      const productId = item.product_id || item.productId;
+      let product = productId ? await prisma.product.findUnique({ where: { id: productId } }) : null;
       if (!product) {
         const fallbackProduct =
           (await prisma.product.findFirst({ where: { vendor_id: vendor.id } })) ||
@@ -62,16 +55,20 @@ export class OrderService {
           continue;
         }
       }
+      const qty = item.quantity || 1;
+      const unitPrice = item.unit_price || item.unitPrice || product.sales_price;
+      const lineTotal = item.line_total || item.lineTotal || (unitPrice * qty);
+
       validItems.push({
         product_id: product.id,
-        quantity: item.quantity,
-        unit_price: item.unit_price || product.sales_price,
-        line_total: item.line_total || (product.sales_price * item.quantity),
+        quantity: qty,
+        unit_price: unitPrice,
+        line_total: lineTotal,
       });
     }
 
     if (validItems.length === 0) {
-      throw new Error('No valid products in cart. Please clear your cart and select items again.');
+      throw new Error('No valid products selected for the order.');
     }
 
     const totalAmount = validItems.reduce((sum, item) => sum + item.line_total, 0);
@@ -79,9 +76,9 @@ export class OrderService {
     const order = await orderRepo.create({
       customer_id: customer.id,
       vendor_id: vendor.id,
-      scheduled_pickup_at: new Date(data.scheduled_pickup_at),
-      scheduled_return_at: new Date(data.scheduled_return_at),
-      pickup_type: data.pickup_type,
+      scheduled_pickup_at: new Date(scheduledPickupInput || Date.now()),
+      scheduled_return_at: new Date(scheduledReturnInput || Date.now() + 86400000),
+      pickup_type: data.pickup_type || data.pickupType || 'DELIVERY',
       total_amount: totalAmount,
       items: validItems,
     });

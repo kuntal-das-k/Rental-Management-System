@@ -9,7 +9,8 @@ export class DashboardController {
     try {
       const user = req.user!;
       const vendorId = user.role === 'VENDOR' ? user.vendorId : (req.query.vendorId as string);
-      const metrics = await dashboardService.getDashboardMetrics(vendorId);
+      const timeframe = (req.query.timeframe as string) || 'week';
+      const metrics = await dashboardService.getDashboardMetrics(vendorId, timeframe);
       return res.status(200).json({ success: true, data: metrics });
     } catch (err: any) {
       return res.status(400).json({ success: false, error: err.message });

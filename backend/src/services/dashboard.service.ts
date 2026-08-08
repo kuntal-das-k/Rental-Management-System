@@ -48,12 +48,17 @@ export class DashboardService {
     };
   }
 
-  async getDashboardMetrics(vendorId?: string) {
+  async getDashboardMetrics(vendorId?: string, timeframe: string = 'week') {
     const whereBase: any = {};
     if (vendorId) whereBase.vendor_id = vendorId;
 
     const now = new Date();
     const { dueToday, overdue } = await this.getDueAndOverdueOrders(vendorId);
+
+    // Completed orders count
+    const completedCount = await prisma.order.count({
+      where: { ...whereBase, state: 'RETURNED' },
+    });
 
     const [
       totalRevenueResult,
@@ -61,7 +66,9 @@ export class DashboardService {
       upcomingPickupsCount,
       upcomingReturnsCount,
       totalDepositsResult,
+      totalDepositsCount,
       totalLateFeesResult,
+      recentOrders,
     ] = await Promise.all([
       prisma.order.aggregate({
         where: { ...whereBase, state: { in: ['SALES_ORDER', 'PICKED_UP', 'RETURNED'] } },
@@ -85,11 +92,94 @@ export class DashboardService {
         _sum: { amount: true },
       }),
 
+      prisma.payment.count({
+        where: { order: whereBase, type: 'DEPOSIT' },
+      }),
+
       prisma.payment.aggregate({
         where: { order: whereBase, type: 'LATE_FEE' },
         _sum: { amount: true },
       }),
+
+      prisma.order.findMany({
+        where: whereBase,
+        take: 10,
+        orderBy: { created_at: 'desc' },
+        include: {
+          customer: { select: { id: true, name: true, email: true } },
+          vendor: { select: { id: true, company_name: true } },
+          order_items: { include: { product: true } },
+        },
+      }),
     ]);
+
+    // Total orders across system
+    const totalOrdersCount = activeRentalsCount + completedCount + overdue.length;
+    const calcPct = (cnt: number) => (totalOrdersCount > 0 ? Math.round((cnt / totalOrdersCount) * 100) : 0);
+
+    const statusDistribution = [
+      { key: 'active', label: 'Active Rentals', count: activeRentalsCount, percentage: calcPct(activeRentalsCount), color: '#0F172A' },
+      { key: 'upcoming_returns', label: 'Upcoming Returns', count: upcomingReturnsCount, percentage: calcPct(upcomingReturnsCount), color: '#475569' },
+      { key: 'upcoming_pickups', label: 'Upcoming Pickups', count: upcomingPickupsCount, percentage: calcPct(upcomingPickupsCount), color: '#94A3B8' },
+      { key: 'overdue', label: 'Overdue Rentals', count: overdue.length, percentage: calcPct(overdue.length), color: '#CBD5E1' },
+      { key: 'completed', label: 'Completed Rentals', count: completedCount, percentage: calcPct(completedCount), color: '#E2E8F0' },
+    ];
+
+    // Generate Overview Line/Area Chart points
+    const chartPoints: Array<{ label: string; fullDate: string; revenue: number; orders: number }> = [];
+    const daysToGenerate = timeframe === 'month' ? 30 : 7;
+
+    if (timeframe === 'year') {
+      for (let i = 11; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const nextD = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+        const monthLabel = d.toLocaleString('default', { month: 'short' });
+
+        const agg = await prisma.order.aggregate({
+          where: {
+            ...whereBase,
+            created_at: { gte: d, lt: nextD },
+            state: { in: ['SALES_ORDER', 'PICKED_UP', 'RETURNED'] },
+          },
+          _sum: { total_amount: true },
+          _count: { id: true },
+        });
+
+        chartPoints.push({
+          label: monthLabel,
+          fullDate: monthLabel,
+          revenue: agg._sum.total_amount || 0,
+          orders: agg._count.id || 0,
+        });
+      }
+    } else {
+      for (let i = daysToGenerate - 1; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(now.getDate() - i);
+        const dayStart = new Date(d); dayStart.setHours(0, 0, 0, 0);
+        const dayEnd = new Date(d); dayEnd.setHours(23, 59, 59, 999);
+
+        const dateLabel = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const isoDate = d.toISOString().split('T')[0];
+
+        const agg = await prisma.order.aggregate({
+          where: {
+            ...whereBase,
+            created_at: { gte: dayStart, lte: dayEnd },
+            state: { in: ['SALES_ORDER', 'PICKED_UP', 'RETURNED'] },
+          },
+          _sum: { total_amount: true },
+          _count: { id: true },
+        });
+
+        chartPoints.push({
+          label: dateLabel,
+          fullDate: isoDate,
+          revenue: agg._sum.total_amount || 0,
+          orders: agg._count.id || 0,
+        });
+      }
+    }
 
     return {
       activeRentals: activeRentalsCount,
@@ -98,10 +188,16 @@ export class DashboardService {
       upcomingReturns: upcomingReturnsCount,
       overdueRentals: overdue.length,
       totalRevenue: totalRevenueResult._sum.total_amount || 0,
+      thisWeekRevenue: totalRevenueResult._sum.total_amount || 0,
       securityDepositsHeld: totalDepositsResult._sum.amount || 0,
+      securityDepositsCount: totalDepositsCount,
       lateFeeCollection: totalLateFeesResult._sum.amount || 0,
+      totalOrdersCount,
       dueTodayOrders: dueToday,
       overdueOrders: overdue,
+      recentOrders,
+      statusDistribution,
+      overviewChart: chartPoints,
     };
   }
 
