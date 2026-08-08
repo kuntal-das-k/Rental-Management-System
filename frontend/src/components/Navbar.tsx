@@ -112,45 +112,45 @@ export const Navbar: React.FC<NavbarProps> = ({ searchQuery, onSearchChange }) =
               {user.role === 'VENDOR' && (
                 <Link
                   to="/vendor/dashboard"
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 border border-cyan-500/30 text-xs font-semibold transition-all"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 border border-cyan-500/30 text-xs font-bold transition-all"
                 >
                   <LayoutDashboard className="w-4 h-4" />
-                  <span className="hidden sm:inline">Vendor Portal</span>
+                  <span>Vendor Portal</span>
                 </Link>
               )}
 
               {user.role === 'ADMIN' && (
                 <Link
                   to="/admin/dashboard"
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 text-xs font-semibold transition-all"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 text-xs font-bold transition-all"
                 >
                   <ShieldCheck className="w-4 h-4" />
-                  <span className="hidden sm:inline">Admin Panel</span>
+                  <span>Admin Panel</span>
                 </Link>
               )}
 
               {user.role === 'CUSTOMER' && (
                 <Link
                   to="/customer/orders"
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200 hover:bg-slate-700 text-xs font-semibold transition-all"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 text-slate-200 hover:bg-slate-700 text-xs font-bold transition-all"
                 >
                   <UserIcon className="w-4 h-4" />
-                  <span className="hidden sm:inline">My Orders</span>
+                  <span>My Orders</span>
                 </Link>
               )}
 
               <Link
                 to="/profile"
-                className="p-2 text-slate-400 hover:text-cyan-400 rounded-lg hover:bg-slate-800 transition-colors"
-                title="Profile"
+                className="p-2 text-slate-400 hover:text-cyan-400 rounded-xl hover:bg-slate-800 transition-colors"
+                title="Account Profile"
               >
                 <UserCircle className="w-4 h-4" />
               </Link>
 
               <button
                 onClick={handleLogout}
-                className="p-2 text-slate-400 hover:text-red-400 rounded-lg hover:bg-red-500/10 transition-colors"
-                title="Sign out"
+                className="p-2 text-slate-400 hover:text-red-400 rounded-xl hover:bg-red-500/10 transition-colors"
+                title="Sign Out"
               >
                 <LogOut className="w-4 h-4" />
               </button>

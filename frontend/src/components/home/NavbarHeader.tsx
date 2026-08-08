@@ -67,22 +67,40 @@ export const NavbarHeader: React.FC = () => {
           {user ? (
             <div className="flex items-center gap-3">
               {user.role === 'CUSTOMER' && (
-                <Link to="/wishlist" className="p-2 text-neutral-600 hover:text-neutral-900 transition-colors" title="Wishlist">
-                  <Heart className="w-4 h-4" />
-                </Link>
+                <>
+                  <Link to="/wishlist" className="p-2 text-neutral-600 hover:text-neutral-900 transition-colors" title="Saved Wishlist">
+                    <Heart className="w-4 h-4" />
+                  </Link>
+                  <Link
+                    to="/customer/orders"
+                    className="text-xs font-bold px-3 py-1.5 rounded-full bg-neutral-100 text-neutral-800 hover:bg-neutral-200 transition-colors"
+                  >
+                    My Orders
+                  </Link>
+                </>
               )}
 
               {user.role === 'VENDOR' && (
                 <Link
                   to="/vendor/dashboard"
-                  className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-neutral-100 text-neutral-800 hover:bg-neutral-200 transition-colors"
+                  className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-neutral-900 text-white hover:bg-neutral-800 transition-colors"
                 >
                   <LayoutDashboard className="w-3.5 h-3.5" />
                   <span>Vendor Portal</span>
                 </Link>
               )}
 
-              <Link to="/profile" className="p-1.5 text-neutral-700 hover:text-black transition-colors" title="Profile">
+              {user.role === 'ADMIN' && (
+                <Link
+                  to="/admin/dashboard"
+                  className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-amber-500 text-neutral-950 hover:bg-amber-400 transition-colors"
+                >
+                  <LayoutDashboard className="w-3.5 h-3.5" />
+                  <span>Admin Panel</span>
+                </Link>
+              )}
+
+              <Link to="/profile" className="p-1.5 text-neutral-700 hover:text-black transition-colors" title="Account Profile">
                 <UserCircle className="w-5 h-5" />
               </Link>
 
