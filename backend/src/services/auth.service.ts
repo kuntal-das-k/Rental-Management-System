@@ -1,6 +1,7 @@
 import { UserRepository } from '../repositories/user.repository';
 import { validatePasswordStrength, hashPassword, comparePassword } from '../utils/password';
 import { generateTokens } from '../utils/jwt';
+import { prisma } from '../config';
 
 const userRepo = new UserRepository();
 
@@ -216,7 +217,30 @@ export class AuthService {
     return userRepo.getAllUsers();
   }
 
-  async toggleUserActive(userId: string, isActive: boolean) {
-    return userRepo.toggleUserActiveStatus(userId, isActive);
+  async toggleUserActive(userId: string, isActive: boolean, reason?: string, statusAction?: string) {
+    const updated = await userRepo.toggleUserActiveStatus(userId, isActive);
+
+    if (reason && reason.trim().length > 0) {
+      try {
+        const actionLabel = statusAction || (isActive ? 'ACTIVATED' : 'DEACTIVATED');
+        await prisma.notification.create({
+          data: {
+            user_id: userId,
+            type: 'ACCOUNT_STATUS_CHANGE',
+            channel: 'IN_APP',
+            payload: JSON.stringify({
+              action: actionLabel,
+              reason: reason.trim(),
+              message: `Account status updated to ${actionLabel} by Admin. Reason: "${reason.trim()}"`,
+            }),
+            status: 'UNREAD',
+          },
+        });
+      } catch (err) {
+        console.error('Failed to log notification:', err);
+      }
+    }
+
+    return updated;
   }
 }

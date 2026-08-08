@@ -88,6 +88,13 @@ export const AdminDashboard: React.FC = () => {
   const [newRentalReturnDate, setNewRentalReturnDate] = useState('');
   const [createRentalError, setCreateRentalError] = useState('');
 
+  // Account Status Change Modal State
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const [statusTargetUser, setStatusTargetUser] = useState<any | null>(null);
+  const [statusActionType, setStatusActionType] = useState<'ACTIVATE' | 'DEACTIVATE' | 'CANCEL'>('DEACTIVATE');
+  const [statusReason, setStatusReason] = useState('');
+  const [statusReasonError, setStatusReasonError] = useState('');
+
   // Settings State
   const [lateFeeRate, setLateFeeRate] = useState('15');
   const [gracePeriodDays, setGracePeriodDays] = useState('0');
@@ -148,15 +155,54 @@ export const AdminDashboard: React.FC = () => {
   // Mutations & Actions
   // -------------------------------------------------------------
 
-  // Toggle Customer Active Status
+  // Toggle Customer / Vendor Active Status with mandatory Reason
   const toggleUserActiveMutation = useMutation({
-    mutationFn: async ({ userId, isActive }: { userId: string; isActive: boolean }) => {
-      await api.patch(`/auth/users/${userId}/active`, { isActive });
+    mutationFn: async ({
+      userId,
+      isActive,
+      reason,
+      statusAction,
+    }: {
+      userId: string;
+      isActive: boolean;
+      reason?: string;
+      statusAction?: string;
+    }) => {
+      await api.patch(`/auth/users/${userId}/active`, { isActive, reason, statusAction });
     },
     onSuccess: () => {
       refetchUsers();
+      refetchNotifications();
     },
   });
+
+  const handleStatusSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatusReasonError('');
+
+    if (!statusReason.trim()) {
+      setStatusReasonError('Please state why you are activating, deactivating, or cancelling this vendor profile.');
+      return;
+    }
+    if (!statusTargetUser) return;
+
+    try {
+      const isActive = statusActionType === 'ACTIVATE';
+      await toggleUserActiveMutation.mutateAsync({
+        userId: statusTargetUser.id,
+        isActive,
+        reason: statusReason.trim(),
+        statusAction: statusActionType,
+      });
+
+      setStatusModalOpen(false);
+      setStatusTargetUser(null);
+      setStatusReason('');
+      alert(`Account status updated to ${statusActionType} successfully! Notification sent.`);
+    } catch (err: any) {
+      setStatusReasonError(err.response?.data?.error || 'Failed to update account status');
+    }
+  };
 
   // Toggle Product Published Status
   const toggleProductPublishedMutation = useMutation({
@@ -511,9 +557,9 @@ export const AdminDashboard: React.FC = () => {
 
             {/* Profile User Icon */}
             <button
-              onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+              onClick={() => setActiveTab('settings')}
               className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
-              title="Admin Account"
+              title="Admin Settings & Profile"
             >
               <UserIcon className="w-5 h-5" />
             </button>
@@ -1225,32 +1271,84 @@ export const AdminDashboard: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {vendorsList.map((v: any) => (
-                  <div key={v.id} className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700 font-bold border border-slate-200">
-                        <Building className="w-5 h-5" />
+                  <div key={v.id} className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-4 flex flex-col justify-between">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700 font-bold border border-slate-200">
+                            <Building className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-slate-900 text-sm leading-tight">
+                              {v.vendor_profile?.company_name || v.name}
+                            </h3>
+                            <p className="text-xs text-slate-500">{v.email}</p>
+                          </div>
+                        </div>
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
+                            v.is_active
+                              ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                              : 'bg-red-100 text-red-800 border border-red-200'
+                          }`}
+                        >
+                          {v.is_active ? 'Active' : 'Deactivated'}
+                        </span>
                       </div>
-                      <div>
-                        <h3 className="font-bold text-slate-900 text-sm leading-tight">
-                          {v.vendor_profile?.company_name || v.name}
-                        </h3>
-                        <p className="text-xs text-slate-500">{v.email}</p>
+
+                      <div className="space-y-1.5 text-xs pt-2 border-t border-slate-100">
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">GST Number:</span>
+                          <span className="font-mono font-semibold text-slate-800">{v.vendor_profile?.gst_no || 'N/A'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-500">Category:</span>
+                          <span className="font-semibold text-slate-800">{v.vendor_profile?.product_category || 'General'}</span>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="space-y-1.5 text-xs pt-2 border-t border-slate-100">
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">GST Number:</span>
-                        <span className="font-mono font-semibold text-slate-800">{v.vendor_profile?.gst_no || 'N/A'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">Category:</span>
-                        <span className="font-semibold text-slate-800">{v.vendor_profile?.product_category || 'General'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">Account Status:</span>
-                        <span className="font-bold text-emerald-600">Active</span>
-                      </div>
+                    <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                      {v.is_active ? (
+                        <button
+                          onClick={() => {
+                            setStatusTargetUser(v);
+                            setStatusActionType('DEACTIVATE');
+                            setStatusReason('');
+                            setStatusReasonError('');
+                            setStatusModalOpen(true);
+                          }}
+                          className="px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-bold rounded-lg text-xs transition-colors"
+                        >
+                          Deactivate
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setStatusTargetUser(v);
+                            setStatusActionType('ACTIVATE');
+                            setStatusReason('');
+                            setStatusReasonError('');
+                            setStatusModalOpen(true);
+                          }}
+                          className="px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold rounded-lg text-xs transition-colors"
+                        >
+                          Activate
+                        </button>
+                      )}
+
+                      <button
+                        onClick={() => {
+                          setStatusTargetUser(v);
+                          setStatusActionType('CANCEL');
+                          setStatusReason('');
+                          setStatusReasonError('');
+                          setStatusModalOpen(true);
+                        }}
+                        className="px-3 py-1 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-bold rounded-lg text-xs transition-colors"
+                      >
+                        Cancel Profile
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -1308,7 +1406,13 @@ export const AdminDashboard: React.FC = () => {
                         </td>
                         <td className="py-3 px-4 text-right">
                           <button
-                            onClick={() => toggleUserActiveMutation.mutate({ userId: c.id, isActive: !c.is_active })}
+                            onClick={() => {
+                              setStatusTargetUser(c);
+                              setStatusActionType(c.is_active ? 'DEACTIVATE' : 'ACTIVATE');
+                              setStatusReason('');
+                              setStatusReasonError('');
+                              setStatusModalOpen(true);
+                            }}
                             className={`px-3 py-1 rounded-md text-xs font-bold transition-colors ${
                               c.is_active
                                 ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'
@@ -1748,6 +1852,92 @@ export const AdminDashboard: React.FC = () => {
             >
               Done
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------- */}
+      {/* MODAL 3: VENDOR / USER ACCOUNT STATUS ACTION MODAL            */}
+      {/* ------------------------------------------------------------- */}
+      {statusModalOpen && statusTargetUser && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-slate-200">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-amber-600" />
+                {statusActionType === 'CANCEL'
+                  ? 'Cancel Vendor Profile'
+                  : statusActionType === 'DEACTIVATE'
+                  ? 'Deactivate Account'
+                  : 'Activate Account'}
+              </h3>
+              <button onClick={() => setStatusModalOpen(false)} className="text-slate-400 hover:text-slate-700">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {statusReasonError && (
+              <div className="p-3 bg-red-50 text-red-700 text-xs font-bold rounded-lg border border-red-200">
+                {statusReasonError}
+              </div>
+            )}
+
+            <form onSubmit={handleStatusSubmit} className="space-y-4 text-xs">
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <p className="font-bold text-slate-900">
+                  {statusTargetUser.vendor_profile?.company_name || statusTargetUser.name}
+                </p>
+                <p className="text-slate-500">{statusTargetUser.email}</p>
+                <p className="text-[11px] font-semibold text-slate-600">
+                  Role: <span className="font-bold">{statusTargetUser.role}</span> | Current Status:{' '}
+                  <span className={statusTargetUser.is_active ? 'text-emerald-600 font-bold' : 'text-red-600 font-bold'}>
+                    {statusTargetUser.is_active ? 'Active' : 'Deactivated'}
+                  </span>
+                </p>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-800 mb-1">
+                  Reason for {statusActionType.toLowerCase()} (Required)
+                </label>
+                <textarea
+                  rows={3}
+                  value={statusReason}
+                  onChange={(e) => setStatusReason(e.target.value)}
+                  placeholder={`State why you are ${
+                    statusActionType === 'CANCEL'
+                      ? 'cancelling'
+                      : statusActionType === 'DEACTIVATE'
+                      ? 'deactivating'
+                      : 'activating'
+                  } this vendor profile...`}
+                  className="w-full p-2.5 bg-white border border-slate-300 rounded-lg text-xs font-medium focus:ring-2 focus:ring-slate-900 focus:outline-none"
+                  required
+                ></textarea>
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setStatusModalOpen(false)}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className={`px-5 py-2 text-white font-bold rounded-lg shadow-sm ${
+                    statusActionType === 'CANCEL'
+                      ? 'bg-red-600 hover:bg-red-700'
+                      : statusActionType === 'DEACTIVATE'
+                      ? 'bg-amber-600 hover:bg-amber-700'
+                      : 'bg-emerald-600 hover:bg-emerald-700'
+                  }`}
+                >
+                  Confirm {statusActionType}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
