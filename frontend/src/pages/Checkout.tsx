@@ -1,10 +1,6 @@
 import React, { useState } from 'react';
-<<<<<<< HEAD
 import { useNavigate, Link } from 'react-router-dom';
-=======
-import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
->>>>>>> b65a2f1a9e0704155623358e08731bb676553e8a
 import { useCartStore } from '../store/useCartStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { NavbarHeader } from '../components/home/NavbarHeader';
