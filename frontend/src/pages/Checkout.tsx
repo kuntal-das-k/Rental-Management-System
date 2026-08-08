@@ -267,7 +267,7 @@ export const Checkout: React.FC = () => {
                 <Lock className="w-4 h-4 text-slate-800 shrink-0" />
                 <span>
                   Clicking <strong className="text-slate-900 font-bold">"Complete Payment & Reserve"</strong> will simulate a secure charge of{' '}
-                  <strong className="text-slate-900 font-extrabold">${totalAmount.toFixed(2)}</strong> and auto-generate your printable PDF invoice.
+                  <strong className="text-slate-900 font-extrabold">₹{totalAmount.toFixed(2)}</strong> and auto-generate your printable PDF invoice.
                 </span>
               </div>
             </div>
@@ -301,7 +301,7 @@ export const Checkout: React.FC = () => {
                       </p>
                     </div>
                     <span className="font-extrabold text-white shrink-0">
-                      ${(item.product.sales_price * durationDays * item.quantity).toFixed(2)}
+                      ₹{(item.product.sales_price * durationDays * item.quantity).toFixed(2)}
                     </span>
                   </div>
                 ))}
@@ -313,26 +313,26 @@ export const Checkout: React.FC = () => {
               <div className="space-y-2.5 text-xs">
                 <div className="flex justify-between text-slate-300 font-medium">
                   <span>Rental Subtotal</span>
-                  <span className="font-bold text-white">${itemsSubtotal.toFixed(2)}</span>
+                  <span className="font-bold text-white">₹{itemsSubtotal.toFixed(2)}</span>
                 </div>
 
                 {discountAmount > 0 && (
                   <div className="flex justify-between text-emerald-400 font-medium">
                     <span>Coupon Discount ({couponCode})</span>
-                    <span className="font-bold">-${discountAmount.toFixed(2)}</span>
+                    <span className="font-bold">-₹{discountAmount.toFixed(2)}</span>
                   </div>
                 )}
 
                 <div className="flex justify-between text-slate-300 font-medium">
                   <span>Refundable Security Deposit</span>
-                  <span className="font-bold text-white">${depositsTotal.toFixed(2)}</span>
+                  <span className="font-bold text-white">₹{depositsTotal.toFixed(2)}</span>
                 </div>
 
                 <hr className="border-slate-800 my-2" />
 
                 <div className="flex justify-between items-baseline pt-1">
                   <span className="text-base font-extrabold text-white">Grand Total</span>
-                  <span className="text-2xl font-black text-white">${totalAmount.toFixed(2)}</span>
+                  <span className="text-2xl font-black text-white">₹{totalAmount.toFixed(2)}</span>
                 </div>
               </div>
 

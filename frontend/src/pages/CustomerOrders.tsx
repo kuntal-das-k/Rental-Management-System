@@ -123,7 +123,7 @@ export const CustomerOrders: React.FC = () => {
             { label: 'Total Orders', value: orders.length, icon: Package, color: 'text-cyan-400' },
             { label: 'Active Rentals', value: activeCount, icon: Truck, color: 'text-amber-400' },
             { label: 'Completed', value: completedCount, icon: CheckCircle2, color: 'text-emerald-400' },
-            { label: 'Total Spent', value: `$${totalSpent.toFixed(0)}`, icon: CreditCard, color: 'text-blue-400' },
+            { label: 'Total Spent', value: `₹${totalSpent.toFixed(0)}`, icon: CreditCard, color: 'text-blue-400' },
           ].map((card, i) => {
             const CardIcon = card.icon;
             return (
@@ -199,7 +199,7 @@ export const CustomerOrders: React.FC = () => {
                           )}
                         </div>
                         <p className="text-xs text-slate-400 mt-0.5 truncate">
-                          {order.vendor?.company_name} · {order.order_items?.length || 0} item(s) · ${order.total_amount.toFixed(2)}
+                          {order.vendor?.company_name} · {order.order_items?.length || 0} item(s) · ₹{order.total_amount.toFixed(2)}
                         </p>
                       </div>
                     </div>
@@ -232,8 +232,8 @@ export const CustomerOrders: React.FC = () => {
                               <tr key={item.id}>
                                 <td className="py-2 font-semibold text-slate-200">{item.product?.name || 'Product'}</td>
                                 <td className="py-2 text-center">{item.quantity}</td>
-                                <td className="py-2 text-right">${item.unit_price.toFixed(2)}</td>
-                                <td className="py-2 text-right font-bold text-white">${item.line_total.toFixed(2)}</td>
+                                <td className="py-2 text-right">₹{item.unit_price.toFixed(2)}</td>
+                                <td className="py-2 text-right font-bold text-white">₹{item.line_total.toFixed(2)}</td>
                               </tr>
                             ))}
                           </tbody>
@@ -274,7 +274,7 @@ export const CustomerOrders: React.FC = () => {
                                 </span>
                                 <div className="text-right">
                                   <span className={`font-bold ${p.type === 'LATE_FEE' ? 'text-red-400' : 'text-cyan-300'}`}>
-                                    ${p.amount.toFixed(2)}
+                                    ₹{p.amount.toFixed(2)}
                                   </span>
                                   <span className="block text-[9px] font-extrabold uppercase text-slate-400">
                                     {p.status || 'COMPLETED'}

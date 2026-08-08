@@ -77,9 +77,9 @@ export const PickupReturnModal: React.FC<PickupReturnModalProps> = ({
                     Overdue Return ({diffDays} Day{diffDays > 1 ? 's' : ''} Late)
                   </span>
                   <p className="text-[11px] text-slate-300 mt-0.5">
-                    Late fee penalty of <strong className="text-red-400">${calculatedPenalty}</strong> will be calculated and deducted from the <strong>${depositAmount}</strong> security deposit.
+                    Late fee penalty of <strong className="text-red-400">₹{calculatedPenalty}</strong> will be calculated and deducted from the <strong>₹{depositAmount}</strong> security deposit.
                     <span className="block text-emerald-400 font-bold mt-0.5">
-                      Net Deposit Refund: ${refundBalance.toFixed(2)}
+                      Net Deposit Refund: ₹{refundBalance.toFixed(2)}
                     </span>
                   </p>
                 </div>
@@ -90,7 +90,7 @@ export const PickupReturnModal: React.FC<PickupReturnModalProps> = ({
                 <div className="text-[11px]">
                   <span className="font-extrabold text-emerald-400">On-Time Return Verified</span>
                   <p className="text-slate-300 mt-0.5">
-                    Customer gets the entire <strong className="text-emerald-400">${depositAmount} security deposit refunded in full</strong> without any penalty deductions.
+                    Customer gets the entire <strong className="text-emerald-400">₹{depositAmount} security deposit refunded in full</strong> without any penalty deductions.
                   </p>
                 </div>
               </div>

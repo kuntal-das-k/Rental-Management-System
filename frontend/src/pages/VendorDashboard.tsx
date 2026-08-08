@@ -36,6 +36,7 @@ import {
   AlertTriangle,
   DollarSign,
   ShieldCheck,
+  Trash2,
 } from 'lucide-react';
 import { format, isToday } from 'date-fns';
 
@@ -53,6 +54,7 @@ export const VendorDashboard: React.FC = () => {
   const [ordersViewMode, setOrdersViewMode] = useState<'table' | 'kanban'>('table');
   const [ordersStatusFilter, setOrdersStatusFilter] = useState<string>('ALL');
   const [globalSearchQuery, setGlobalSearchQuery] = useState<string>('');
+  const [activeProductMenuId, setActiveProductMenuId] = useState<string | null>(null);
 
   // Modals
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -141,9 +143,32 @@ export const VendorDashboard: React.FC = () => {
   const handleTogglePublishProduct = async (productId: string, isPublished: boolean) => {
     try {
       await api.patch(`/products/${productId}/publish`, { isPublished: !isPublished });
+      await queryClient.invalidateQueries();
       refetchProducts();
     } catch (err: any) {
       alert(err.response?.data?.error || 'Publish toggle failed');
+    }
+  };
+
+  const handleDeleteProduct = async (productId: string) => {
+    if (!confirm('Are you sure you want to delete this product from inventory?')) return;
+    try {
+      await api.delete(`/products/${productId}`);
+      await queryClient.invalidateQueries();
+      refetchProducts();
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Failed to delete product');
+    }
+  };
+
+  const handleToggleStockProduct = async (productId: string, currentStock: number) => {
+    try {
+      const newStock = currentStock > 0 ? 0 : 1;
+      await api.put(`/products/${productId}`, { stock_qty: newStock });
+      await queryClient.invalidateQueries();
+      refetchProducts();
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Failed to update stock status');
     }
   };
 
@@ -325,7 +350,7 @@ export const VendorDashboard: React.FC = () => {
                   { label: 'DUE TODAY', val: metrics?.rentalsDueToday ?? dueTodayCount, icon: CalendarIcon, color: 'text-slate-900' },
                   { label: 'UPCOMING PICKUPS', val: metrics?.upcomingPickups ?? upcomingPickupsCount, icon: Clock, color: 'text-slate-900' },
                   { label: 'OVERDUE', val: metrics?.overdueRentals ?? overdueCount, icon: AlertTriangle, color: 'text-red-600' },
-                  { label: 'TOTAL REVENUE', val: `$${(metrics?.totalRevenue ?? totalRevenueSum).toFixed(0)}`, icon: DollarSign, color: 'text-slate-900' },
+                  { label: 'TOTAL REVENUE', val: `₹${(metrics?.totalRevenue ?? totalRevenueSum).toFixed(0)}`, icon: DollarSign, color: 'text-slate-900' },
                 ].map((card, i) => (
                   <div key={i} className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs space-y-2">
                     <div className="flex items-center justify-between">
@@ -384,7 +409,7 @@ export const VendorDashboard: React.FC = () => {
                         </p>
                         <div className="flex justify-between text-[11px] text-slate-400 font-semibold pt-1 border-t border-slate-200/60">
                           <span>{new Date(ord.scheduled_pickup_at).toLocaleDateString()}</span>
-                          <span className="text-slate-900 font-bold">${ord.total_amount.toFixed(2)}</span>
+                          <span className="text-slate-900 font-bold">₹{ord.total_amount.toFixed(2)}</span>
                         </div>
                       </div>
                     ))}
@@ -535,24 +560,68 @@ export const VendorDashboard: React.FC = () => {
                     {/* Price & Actions Footer */}
                     <div className="p-5 pt-4 border-t border-slate-100 flex items-center justify-between mt-4">
                       <div>
-                        <span className="text-lg font-black text-slate-900">${prod.sales_price}</span>
+                        <span className="text-lg font-black text-slate-900">₹{prod.sales_price}</span>
                         <span className="text-xs text-slate-500 font-medium"> /night</span>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 relative">
                         <button
                           onClick={() => setEditingProduct(prod)}
                           className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-800"
                         >
                           Edit
                         </button>
-                        <button
-                          onClick={() => handleTogglePublishProduct(prod.id, prod.is_published)}
-                          className="p-1.5 rounded-xl text-slate-400 hover:text-slate-900 hover:bg-slate-100"
-                          title="Toggle Status"
-                        >
-                          <MoreVertical className="w-4 h-4" />
-                        </button>
+                        
+                        <div className="relative">
+                          <button
+                            onClick={() => setActiveProductMenuId(activeProductMenuId === prod.id ? null : prod.id)}
+                            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+                            title="Product Actions"
+                          >
+                            <MoreVertical className="w-4 h-4" />
+                          </button>
+
+                          {activeProductMenuId === prod.id && (
+                            <div className="absolute right-0 bottom-8 w-52 bg-white rounded-2xl shadow-xl border border-slate-200 p-1.5 z-30 space-y-0.5 text-xs font-bold animate-in fade-in zoom-in-95 duration-150">
+                              <button
+                                onClick={() => {
+                                  setActiveProductMenuId(null);
+                                  handleTogglePublishProduct(prod.id, prod.is_published);
+                                }}
+                                className="w-full text-left px-3 py-2 text-slate-700 hover:bg-slate-100 rounded-xl flex items-center justify-between"
+                              >
+                                <span>Status</span>
+                                <span className={prod.is_published ? 'text-amber-600' : 'text-emerald-600'}>
+                                  {prod.is_published ? '📝 Set to Draft' : '🚀 Publish Item'}
+                                </span>
+                              </button>
+
+                              <button
+                                onClick={() => {
+                                  setActiveProductMenuId(null);
+                                  handleToggleStockProduct(prod.id, prod.stock_qty);
+                                }}
+                                className="w-full text-left px-3 py-2 text-slate-700 hover:bg-slate-100 rounded-xl flex items-center justify-between"
+                              >
+                                <span>Inventory</span>
+                                <span className={prod.stock_qty > 0 ? 'text-rose-600' : 'text-emerald-600'}>
+                                  {prod.stock_qty > 0 ? '📦 Out of Stock' : '✅ Mark In Stock'}
+                                </span>
+                              </button>
+
+                              <button
+                                onClick={() => {
+                                  setActiveProductMenuId(null);
+                                  handleDeleteProduct(prod.id);
+                                }}
+                                className="w-full text-left px-3 py-2 text-rose-600 hover:bg-rose-50 rounded-xl flex items-center gap-2 border-t border-slate-100 mt-1 pt-2"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>Delete Product</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -561,9 +630,9 @@ export const VendorDashboard: React.FC = () => {
                 {/* List New Item Dashed Card */}
                 <div
                   onClick={() => setEditingProduct(null)}
-                  className="border-2 border-dashed border-slate-300 rounded-3xl p-8 flex flex-col items-center justify-center text-center space-y-4 hover:border-slate-900 transition-all cursor-pointer bg-slate-50/50 min-h-[360px]"
+                  className="group border-2 border-dashed border-slate-300 hover:border-slate-900 rounded-3xl p-8 flex flex-col items-center justify-center text-center space-y-4 hover:bg-slate-50/80 transition-all cursor-pointer bg-slate-50/40 min-h-[360px]"
                 >
-                  <div className="w-12 h-12 rounded-full bg-slate-900 text-white flex items-center justify-center shadow-sm">
+                  <div className="w-12 h-12 rounded-2xl bg-slate-900 group-hover:bg-slate-800 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-all duration-300">
                     <Plus className="w-6 h-6" />
                   </div>
                   <div className="space-y-1 max-w-xs">

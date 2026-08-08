@@ -146,9 +146,9 @@ export const RentalsSidebarFilter: React.FC<RentalsSidebarFilterProps> = ({
               className="w-full accent-black bg-neutral-200 h-1.5 rounded-lg cursor-pointer"
             />
             <div className="flex items-center justify-between text-xs text-neutral-500 font-bold">
-              <span>$10</span>
-              <span className="text-neutral-900 font-extrabold">Max: ${maxPrice}+</span>
-              <span>$1000+</span>
+              <span>₹10</span>
+              <span className="text-neutral-900 font-extrabold">Max: ₹{maxPrice}+</span>
+              <span>₹1000+</span>
             </div>
           </div>
         )}

@@ -214,13 +214,13 @@ export const ProductDetail: React.FC = () => {
               <div>
                 <span className="text-[11px] font-medium text-slate-500 block mb-0.5">Rental Rate</span>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-extrabold text-slate-900">${dailyRate}</span>
+                  <span className="text-3xl font-extrabold text-slate-900">₹{dailyRate}</span>
                   <span className="text-xs font-medium text-slate-500">/ day</span>
                 </div>
               </div>
               <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-slate-200 bg-slate-50 text-slate-700 text-xs font-semibold">
                 <Shield className="w-3.5 h-3.5 text-slate-600" />
-                <span>${depositAmount} Refundable Deposit</span>
+                <span>₹{depositAmount} Refundable Deposit</span>
               </div>
             </div>
 
@@ -316,16 +316,16 @@ export const ProductDetail: React.FC = () => {
               <div className="space-y-2.5 text-xs">
                 <div className="flex justify-between text-slate-300 font-medium">
                   <span>Daily Rental Rate x {durationDays} days</span>
-                  <span className="font-bold text-white">${subtotal.toFixed(2)}</span>
+                  <span className="font-bold text-white">₹{subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-slate-300 font-medium">
                   <span>Security Deposit (Refundable)</span>
-                  <span className="font-bold text-white">${depositTotal.toFixed(2)}</span>
+                  <span className="font-bold text-white">₹{depositTotal.toFixed(2)}</span>
                 </div>
                 <hr className="border-slate-800 my-2" />
                 <div className="flex justify-between items-baseline pt-1">
                   <span className="text-base font-extrabold text-white">Total Due</span>
-                  <span className="text-2xl font-black text-white">${grandTotal.toFixed(2)}</span>
+                  <span className="text-2xl font-black text-white">₹{grandTotal.toFixed(2)}</span>
                 </div>
               </div>
 

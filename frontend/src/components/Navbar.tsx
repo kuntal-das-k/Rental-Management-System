@@ -84,6 +84,15 @@ export const Navbar: React.FC<NavbarProps> = ({ searchQuery, onSearchChange }) =
           </Link>
 
           <Link
+            to="/contact"
+            className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors hidden sm:block ${
+              isActive('/contact') ? 'text-cyan-400 bg-cyan-500/10 font-bold' : 'text-slate-300 hover:text-cyan-400'
+            }`}
+          >
+            Contact
+          </Link>
+
+          <Link
             to="/how-it-works"
             className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors hidden lg:block ${
               isActive('/how-it-works') ? 'text-cyan-400 bg-cyan-500/10 font-bold' : 'text-slate-300 hover:text-cyan-400'
