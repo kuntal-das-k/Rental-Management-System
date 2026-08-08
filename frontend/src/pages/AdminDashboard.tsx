@@ -86,17 +86,17 @@ export const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Executive Metrics */}
+        {/* Executive Rental Operations Metrics Bar (All 8 Insights) */}
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
           {[
-            { label: 'Total Users', val: users.length, icon: Users, color: 'text-blue-400' },
-            { label: 'Vendors', val: vendorCount, icon: Package, color: 'text-cyan-400' },
-            { label: 'Customers', val: customerCount, icon: Users, color: 'text-slate-300' },
-            { label: 'Active Rentals', val: metrics?.activeRentals || 0, icon: Truck, color: 'text-amber-400' },
-            { label: 'Due Today', val: metrics?.rentalsDueToday || 0, icon: Calendar, color: 'text-blue-400' },
-            { label: 'Overdue', val: metrics?.overdueRentals || 0, icon: AlertTriangle, color: 'text-red-400' },
-            { label: 'Revenue', val: `$${(metrics?.totalRevenue || 0).toFixed(0)}`, icon: DollarSign, color: 'text-emerald-400' },
-            { label: 'Late Fees', val: `$${(metrics?.lateFeeCollection || 0).toFixed(0)}`, icon: RotateCcw, color: 'text-amber-400' },
+            { label: 'Active Rentals', val: metrics?.activeRentals || 0, icon: Truck, color: 'text-cyan-400' },
+            { label: 'Rentals Due Today', val: metrics?.rentalsDueToday || 0, icon: Calendar, color: 'text-amber-400' },
+            { label: 'Upcoming Pickups', val: metrics?.upcomingPickups || 0, icon: Calendar, color: 'text-blue-400' },
+            { label: 'Upcoming Returns', val: metrics?.upcomingReturns || 0, icon: RotateCcw, color: 'text-purple-400' },
+            { label: 'Overdue Rentals', val: metrics?.overdueRentals || 0, icon: AlertTriangle, color: 'text-red-400' },
+            { label: 'Revenue from Rentals', val: `$${(metrics?.totalRevenue || 0).toFixed(0)}`, icon: DollarSign, color: 'text-emerald-400' },
+            { label: 'Security Deposits Held', val: `$${(metrics?.securityDepositsHeld || 0).toFixed(0)}`, icon: ShieldCheck, color: 'text-cyan-400' },
+            { label: 'Late Fee Collection', val: `$${(metrics?.lateFeeCollection || 0).toFixed(0)}`, icon: DollarSign, color: 'text-amber-400' },
           ].map((widget, i) => {
             const WidgetIcon = widget.icon;
             return (

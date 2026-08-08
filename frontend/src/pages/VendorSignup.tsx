@@ -25,8 +25,17 @@ export const VendorSignup: React.FC = () => {
     e.preventDefault();
     setErrorMessage('');
 
+    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+    if (!emailRegex.test(formData.email.trim())) {
+      setErrorMessage('Please enter a valid email address (e.g. user@example.com)');
+      return;
+    }
+
     try {
-      const res = await api.post('/auth/signup/vendor', formData);
+      const res = await api.post('/auth/signup/vendor', {
+        ...formData,
+        email: formData.email.trim().toLowerCase(),
+      });
       const { user, accessToken } = res.data.data;
       setAuth(user, accessToken);
       navigate('/vendor/dashboard');

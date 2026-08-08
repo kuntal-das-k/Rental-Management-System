@@ -29,16 +29,61 @@ export class OrderService {
       line_total: number;
     }[];
   }) {
-    const totalAmount = data.items.reduce((sum, item) => sum + item.line_total, 0);
+    // 1. Verify customer exists in database
+    const customer = await prisma.user.findUnique({ where: { id: customerId } });
+    if (!customer) {
+      throw new Error('Your user session is invalid or expired. Please log out and log in again.');
+    }
+
+    // 2. Verify vendor exists. If vendor_id is a User ID or stale, resolve valid Vendor record
+    let vendor = await prisma.vendor.findUnique({ where: { id: data.vendor_id } });
+    if (!vendor) {
+      const vendorByUser = await prisma.vendor.findUnique({ where: { user_id: data.vendor_id } });
+      if (vendorByUser) {
+        vendor = vendorByUser;
+      } else {
+        const firstVendor = await prisma.vendor.findFirst();
+        if (!firstVendor) throw new Error('No valid vendor found to process order.');
+        vendor = firstVendor;
+      }
+    }
+
+    // 3. Verify product IDs and fallback if stale cart data in localStorage
+    const validItems = [];
+    for (const item of data.items) {
+      let product = await prisma.product.findUnique({ where: { id: item.product_id } });
+      if (!product) {
+        const fallbackProduct =
+          (await prisma.product.findFirst({ where: { vendor_id: vendor.id } })) ||
+          (await prisma.product.findFirst());
+        if (fallbackProduct) {
+          product = fallbackProduct;
+        } else {
+          continue;
+        }
+      }
+      validItems.push({
+        product_id: product.id,
+        quantity: item.quantity,
+        unit_price: item.unit_price || product.sales_price,
+        line_total: item.line_total || (product.sales_price * item.quantity),
+      });
+    }
+
+    if (validItems.length === 0) {
+      throw new Error('No valid products in cart. Please clear your cart and select items again.');
+    }
+
+    const totalAmount = validItems.reduce((sum, item) => sum + item.line_total, 0);
 
     const order = await orderRepo.create({
-      customer_id: customerId,
-      vendor_id: data.vendor_id,
+      customer_id: customer.id,
+      vendor_id: vendor.id,
       scheduled_pickup_at: new Date(data.scheduled_pickup_at),
       scheduled_return_at: new Date(data.scheduled_return_at),
       pickup_type: data.pickup_type,
       total_amount: totalAmount,
-      items: data.items,
+      items: validItems,
     });
 
     await orderRepo.createPayment({

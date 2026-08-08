@@ -4,9 +4,52 @@ import { generateTokens } from '../utils/jwt';
 
 const userRepo = new UserRepository();
 
+function validateEmail(email: string): { valid: boolean; message: string } {
+  if (!email || typeof email !== 'string') {
+    return { valid: false, message: 'Email address is required' };
+  }
+
+  const trimmed = email.trim().toLowerCase();
+
+  if (trimmed.length === 0) {
+    return { valid: false, message: 'Email address cannot be empty' };
+  }
+
+  if (trimmed.length > 254) {
+    return { valid: false, message: 'Email address is too long (max 254 characters)' };
+  }
+
+  // RFC 5322 compliant regex
+  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+  if (!emailRegex.test(trimmed)) {
+    return { valid: false, message: 'Please enter a valid email address (e.g. user@example.com)' };
+  }
+
+  // Must have at least one dot in the domain part
+  const [, domain] = trimmed.split('@');
+  if (!domain || !domain.includes('.')) {
+    return { valid: false, message: 'Email domain must include a valid TLD (e.g. .com, .in, .org)' };
+  }
+
+  // Domain TLD must be at least 2 characters
+  const tld = domain.split('.').pop();
+  if (!tld || tld.length < 2) {
+    return { valid: false, message: 'Email domain has an invalid TLD' };
+  }
+
+  return { valid: true, message: '' };
+}
+
 export class AuthService {
   async login(email: string, password: string) {
-    const user = await userRepo.findByEmail(email);
+    // Validate email format before querying database
+    const emailCheck = validateEmail(email);
+    if (!emailCheck.valid) {
+      throw new Error(emailCheck.message);
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await userRepo.findByEmail(normalizedEmail);
     if (!user || !user.is_active) {
       throw new Error('Invalid User ID or Password');
     }
@@ -52,7 +95,14 @@ export class AuthService {
       throw new Error(validation.message);
     }
 
-    const existingUser = await userRepo.findByEmail(data.email);
+    // Validate email format
+    const emailCheck = validateEmail(data.email);
+    if (!emailCheck.valid) {
+      throw new Error(emailCheck.message);
+    }
+
+    const normalizedEmail = data.email.trim().toLowerCase();
+    const existingUser = await userRepo.findByEmail(normalizedEmail);
     if (existingUser) {
       throw new Error('Email address is already registered');
     }
@@ -61,7 +111,7 @@ export class AuthService {
     const user = await userRepo.createCustomer({
       firstName: data.firstName,
       lastName: data.lastName,
-      email: data.email,
+      email: normalizedEmail,
       passwordHash,
     });
 
@@ -105,7 +155,14 @@ export class AuthService {
       throw new Error('Company Name, Product Category, and GST No are required');
     }
 
-    const existingUser = await userRepo.findByEmail(data.email);
+    // Validate email format
+    const emailCheck = validateEmail(data.email);
+    if (!emailCheck.valid) {
+      throw new Error(emailCheck.message);
+    }
+
+    const normalizedEmail = data.email.trim().toLowerCase();
+    const existingUser = await userRepo.findByEmail(normalizedEmail);
     if (existingUser) {
       throw new Error('Email address is already registered');
     }
@@ -117,7 +174,7 @@ export class AuthService {
       companyName: data.companyName,
       productCategory: data.productCategory,
       gstNo: data.gstNo,
-      email: data.email,
+      email: normalizedEmail,
       passwordHash,
     });
 
