@@ -259,8 +259,8 @@ async function main() {
       ]),
       attribute_values: {
         create: [
-          { attribute_value_id: brandAttr.values.find((v) => v.value === 'Sony')!.id },
-          { attribute_value_id: colorAttr.values.find((v) => v.value === '#000000')!.id },
+          { attribute_value_id: brandAttr.values.find((v: any) => v.value === 'Sony')!.id },
+          { attribute_value_id: colorAttr.values.find((v: any) => v.value === '#000000')!.id },
         ],
       },
     },
@@ -287,8 +287,8 @@ async function main() {
       ]),
       attribute_values: {
         create: [
-          { attribute_value_id: brandAttr.values.find((v) => v.value === 'Canon')!.id },
-          { attribute_value_id: colorAttr.values.find((v) => v.value === '#000000')!.id },
+          { attribute_value_id: brandAttr.values.find((v: any) => v.value === 'Canon')!.id },
+          { attribute_value_id: colorAttr.values.find((v: any) => v.value === '#000000')!.id },
         ],
       },
     },
@@ -316,8 +316,8 @@ async function main() {
       ]),
       attribute_values: {
         create: [
-          { attribute_value_id: brandAttr.values.find((v) => v.value === 'Super73')!.id },
-          { attribute_value_id: colorAttr.values.find((v) => v.value === '#000000')!.id },
+          { attribute_value_id: brandAttr.values.find((v: any) => v.value === 'Super73')!.id },
+          { attribute_value_id: colorAttr.values.find((v: any) => v.value === '#000000')!.id },
         ],
       },
     },

@@ -10,5 +10,8 @@
     "seed": "npm --prefix backend run prisma:seed",
     "build:frontend": "npm --prefix frontend run build",
     "build:backend": "npm --prefix backend run build"
+  },
+  "dependencies": {
+    "ts-node-dev": "^2.0.0"
   }
 }

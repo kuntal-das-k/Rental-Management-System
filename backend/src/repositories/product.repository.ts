@@ -104,27 +104,49 @@ export class ProductRepository {
     sku?: string;
     stock_qty: number;
     sales_price: number;
-    cost_price: number;
+    cost_price?: number;
     is_published?: boolean;
     pickup_time?: string;
     return_time?: string;
     late_fee_per_unit?: number;
     security_deposit_amount?: number;
-    image_urls: string[];
+    image_urls?: string[];
+    image_url?: string;
     attribute_value_ids?: string[];
   }) {
-    const { attribute_value_ids, image_urls, ...productData } = data;
+    const rawData = data as any;
+    const { attribute_value_ids, image_urls, image_url, vendorId, categoryId, vendor_id, category_id, ...rest } = rawData;
+
+    const urls = image_urls || (image_url ? [image_url] : []);
+
+    const cleanData: any = {
+      vendor_id: vendor_id || vendorId,
+      category_id: category_id || categoryId || null,
+      name: rest.name,
+      description: rest.description || '',
+      product_type: rest.product_type || 'GOODS',
+      sku: rest.sku || null,
+      stock_qty: Number(rest.stock_qty) || 1,
+      sales_price: Number(rest.sales_price) || 0,
+      cost_price: Number(rest.cost_price) || 0,
+      is_published: typeof rest.is_published === 'boolean' ? rest.is_published : false,
+      pickup_time: rest.pickup_time || null,
+      return_time: rest.return_time || null,
+      late_fee_per_unit: rest.late_fee_per_unit !== undefined && rest.late_fee_per_unit !== null ? Number(rest.late_fee_per_unit) : null,
+      security_deposit_amount: rest.security_deposit_amount !== undefined && rest.security_deposit_amount !== null ? Number(rest.security_deposit_amount) : null,
+      image_urls: JSON.stringify(urls),
+    };
+
+    if (attribute_value_ids && attribute_value_ids.length > 0) {
+      cleanData.attribute_values = {
+        create: attribute_value_ids.map((id: string) => ({
+          attribute_value_id: id,
+        })),
+      };
+    }
 
     const product = await prisma.product.create({
-      data: {
-        ...productData,
-        image_urls: JSON.stringify(image_urls || []),
-        attribute_values: attribute_value_ids && attribute_value_ids.length > 0 ? {
-          create: attribute_value_ids.map((id) => ({
-            attribute_value_id: id,
-          })),
-        } : undefined,
-      },
+      data: cleanData,
       include: {
         category: true,
         attribute_values: {
@@ -152,25 +174,45 @@ export class ProductRepository {
     late_fee_per_unit: number;
     security_deposit_amount: number;
     image_urls: string[];
+    image_url: string;
     attribute_value_ids: string[];
   }>) {
-    const { attribute_value_ids, image_urls, ...productData } = data;
+    const rawData = data as any;
+    const { attribute_value_ids, image_urls, image_url, vendorId, categoryId, vendor_id, category_id, ...rest } = rawData;
 
     if (attribute_value_ids) {
       await prisma.productAttributeValue.deleteMany({ where: { product_id: id } });
     }
 
+    const urls = image_urls || (image_url ? [image_url] : undefined);
+
+    const updateData: any = {};
+    if (rest.name !== undefined) updateData.name = rest.name;
+    if (rest.description !== undefined) updateData.description = rest.description;
+    if (rest.product_type !== undefined) updateData.product_type = rest.product_type;
+    if (rest.sku !== undefined) updateData.sku = rest.sku;
+    if (rest.stock_qty !== undefined) updateData.stock_qty = Number(rest.stock_qty);
+    if (rest.sales_price !== undefined) updateData.sales_price = Number(rest.sales_price);
+    if (rest.cost_price !== undefined) updateData.cost_price = Number(rest.cost_price);
+    if (rest.is_published !== undefined) updateData.is_published = rest.is_published;
+    if (rest.pickup_time !== undefined) updateData.pickup_time = rest.pickup_time;
+    if (rest.return_time !== undefined) updateData.return_time = rest.return_time;
+    if (rest.late_fee_per_unit !== undefined && rest.late_fee_per_unit !== null) updateData.late_fee_per_unit = Number(rest.late_fee_per_unit);
+    if (rest.security_deposit_amount !== undefined && rest.security_deposit_amount !== null) updateData.security_deposit_amount = Number(rest.security_deposit_amount);
+    if (category_id || categoryId) updateData.category_id = category_id || categoryId;
+    if (urls !== undefined) updateData.image_urls = JSON.stringify(urls);
+
+    if (attribute_value_ids && attribute_value_ids.length > 0) {
+      updateData.attribute_values = {
+        create: attribute_value_ids.map((valId: string) => ({
+          attribute_value_id: valId,
+        })),
+      };
+    }
+
     const product = await prisma.product.update({
       where: { id },
-      data: {
-        ...productData,
-        image_urls: image_urls ? JSON.stringify(image_urls) : undefined,
-        attribute_values: attribute_value_ids ? {
-          create: attribute_value_ids.map((valId) => ({
-            attribute_value_id: valId,
-          })),
-        } : undefined,
-      },
+      data: updateData,
       include: {
         category: true,
         attribute_values: {
