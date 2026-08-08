@@ -561,9 +561,9 @@ export const VendorDashboard: React.FC = () => {
                 {/* List New Item Dashed Card */}
                 <div
                   onClick={() => setEditingProduct(null)}
-                  className="border-2 border-dashed border-slate-300 rounded-3xl p-8 flex flex-col items-center justify-center text-center space-y-4 hover:border-slate-900 transition-all cursor-pointer bg-slate-50/50 min-h-[360px]"
+                  className="group border-2 border-dashed border-slate-300 hover:border-slate-900 rounded-3xl p-8 flex flex-col items-center justify-center text-center space-y-4 hover:bg-slate-50/80 transition-all cursor-pointer bg-slate-50/40 min-h-[360px]"
                 >
-                  <div className="w-12 h-12 rounded-full bg-slate-900 text-white flex items-center justify-center shadow-sm">
+                  <div className="w-12 h-12 rounded-2xl bg-slate-900 group-hover:bg-slate-800 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-all duration-300">
                     <Plus className="w-6 h-6" />
                   </div>
                   <div className="space-y-1 max-w-xs">
