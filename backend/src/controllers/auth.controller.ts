@@ -62,4 +62,26 @@ export class AuthController {
       return res.status(400).json({ success: false, error: err.message });
     }
   }
+
+  async getProfile(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) return res.status(401).json({ success: false, error: 'Unauthorized' });
+      const profile = await authService.getProfile(userId);
+      return res.status(200).json({ success: true, data: profile });
+    } catch (err: any) {
+      return res.status(400).json({ success: false, error: err.message });
+    }
+  }
+
+  async updateProfile(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) return res.status(401).json({ success: false, error: 'Unauthorized' });
+      const updated = await authService.updateProfile(userId, req.body);
+      return res.status(200).json({ success: true, data: updated });
+    } catch (err: any) {
+      return res.status(400).json({ success: false, error: err.message });
+    }
+  }
 }

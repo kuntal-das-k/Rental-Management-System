@@ -10,6 +10,9 @@ router.post('/signup/customer', controller.signupCustomer);
 router.post('/signup/vendor', controller.signupVendor);
 router.post('/reset-password', controller.resetPassword);
 
+router.get('/me', authenticateToken, controller.getProfile);
+router.put('/profile', authenticateToken, controller.updateProfile);
+
 // Admin user management
 router.get('/users', authenticateToken, requireRole(['ADMIN']), controller.getUsers);
 router.patch('/users/:id/active', authenticateToken, requireRole(['ADMIN']), controller.toggleUserActive);

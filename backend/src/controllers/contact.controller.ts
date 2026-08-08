@@ -31,10 +31,16 @@ export class ContactController {
     }
   };
 
-  // Admin endpoint: Fetch all submitted messages
+  // Admin or Vendor: Fetch submitted messages
   getMessages = async (req: Request, res: Response) => {
     try {
+      const { email } = req.query;
+      let whereClause = {};
+      if (email && typeof email === 'string') {
+        whereClause = { email: email.trim().toLowerCase() };
+      }
       const messages = await prisma.contactMessage.findMany({
+        where: whereClause,
         orderBy: { created_at: 'desc' },
       });
 

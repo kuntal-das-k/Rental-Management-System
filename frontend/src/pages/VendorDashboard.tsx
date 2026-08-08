@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/client';
 import { useAuthStore } from '../store/useAuthStore';
@@ -7,6 +8,7 @@ import { SchedulerCalendar } from '../components/SchedulerCalendar';
 import { ReusableBarChart } from '../components/ReusableBarChart';
 import { PickupReturnModal } from '../components/PickupReturnModal';
 import { ProductModal } from '../components/ProductModal';
+import { VendorSupportModal } from '../components/VendorSupportModal';
 import { Order, Product } from '../types';
 import {
   LayoutDashboard,
@@ -37,11 +39,19 @@ import {
   DollarSign,
   ShieldCheck,
   Trash2,
+  Phone,
+  MapPin,
+  Check,
+  Save,
+  LogOut,
+  MessageSquare,
+  Send,
+  User as UserIcon,
 } from 'lucide-react';
 import { format, isToday } from 'date-fns';
 
 export const VendorDashboard: React.FC = () => {
-  const { user, logout } = useAuthStore();
+  const { user, logout, updateUser } = useAuthStore();
   const queryClient = useQueryClient();
 
   // Active Navigation Tab
@@ -56,11 +66,95 @@ export const VendorDashboard: React.FC = () => {
   const [globalSearchQuery, setGlobalSearchQuery] = useState<string>('');
   const [activeProductMenuId, setActiveProductMenuId] = useState<string | null>(null);
 
+  // Profile Popover & Admin Support Query Modals
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState<boolean>(false);
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState<boolean>(false);
+
   // Modals
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [pickupModalOrder, setPickupModalOrder] = useState<Order | null>(null);
   const [returnModalOrder, setReturnModalOrder] = useState<Order | null>(null);
   const [editingProduct, setEditingProduct] = useState<Product | null | undefined>(undefined);
+
+  // Fetch Vendor Profile Data
+  const { data: userProfileData, refetch: refetchProfile } = useQuery({
+    queryKey: ['user-profile', user?.id],
+    queryFn: async () => {
+      const res = await api.get('/auth/me');
+      return res.data.data;
+    },
+  });
+
+  // Profile Settings Edit Form State
+  const [profileForm, setProfileForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '+91 98765 43210',
+    companyName: '',
+    gstNo: '',
+    productCategory: '',
+    logoUrl: '',
+    profileImageUrl: '',
+    addressLine1: 'Building 4, Industrial Park',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+    pincode: '400001',
+  });
+
+  const [saveProfileSuccess, setSaveProfileSuccess] = useState<boolean>(false);
+  const [isSavingProfile, setIsSavingProfile] = useState<boolean>(false);
+
+  // Sync state with fetched user profile data
+  useEffect(() => {
+    if (userProfileData) {
+      setProfileForm((prev) => ({
+        ...prev,
+        firstName: userProfileData.first_name || user?.name?.split(' ')[0] || '',
+        lastName: userProfileData.last_name || user?.name?.split(' ').slice(1).join(' ') || '',
+        email: userProfileData.email || user?.email || '',
+        phone: userProfileData.phone || prev.phone,
+        companyName: userProfileData.vendor_profile?.company_name || user?.companyName || '',
+        gstNo: userProfileData.vendor_profile?.gst_no || user?.gstNo || '27AAAAA0000A1Z5',
+        productCategory:
+          userProfileData.vendor_profile?.product_category ||
+          user?.productCategory ||
+          'Camera & Audio Equipment',
+        logoUrl: userProfileData.vendor_profile?.logo_url || user?.logoUrl || '',
+        profileImageUrl: userProfileData.profile_image_url || user?.profile_image_url || '',
+        addressLine1: userProfileData.addresses?.[0]?.line1 || prev.addressLine1,
+        city: userProfileData.addresses?.[0]?.city || prev.city,
+        state: userProfileData.addresses?.[0]?.state || prev.state,
+        pincode: userProfileData.addresses?.[0]?.pincode || prev.pincode,
+      }));
+    }
+  }, [userProfileData, user]);
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingProfile(true);
+    try {
+      const res = await api.put('/auth/profile', profileForm);
+      const updated = res.data.data;
+      updateUser({
+        name: updated.name,
+        companyName: updated.vendor_profile?.company_name || profileForm.companyName,
+        email: updated.email,
+        gstNo: updated.vendor_profile?.gst_no,
+        productCategory: updated.vendor_profile?.product_category,
+        logoUrl: updated.vendor_profile?.logo_url,
+        profile_image_url: updated.profile_image_url,
+        phone: profileForm.phone,
+      });
+      setSaveProfileSuccess(true);
+      refetchProfile();
+      setTimeout(() => setSaveProfileSuccess(false), 4000);
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Failed to update profile settings.');
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
 
   // API Queries
   const { data: metrics } = useQuery({
@@ -237,16 +331,19 @@ export const VendorDashboard: React.FC = () => {
       {/* ------------------------------------------------------------- */}
       <aside className="w-64 bg-white border-r border-slate-200 flex flex-col justify-between p-4 sticky top-0 h-screen z-30 shrink-0">
         <div className="space-y-6">
-          {/* Brand Logo Header */}
-          <div className="flex items-center gap-3 px-2 py-2">
-            <div className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-sm shadow-2xs">
-              <Building2 className="w-5 h-5" />
-            </div>
+          {/* Brand Logo Header with Fast React Router Link */}
+          <Link
+            to="/"
+            className="flex items-center gap-3 px-2 py-2 rounded-xl  transition-all duration-150 cursor-pointer group"
+            title="Go to Home"
+          >
             <div>
-              <h1 className="font-extrabold text-base text-slate-900 leading-none">Twin6Rental</h1>
-              <span className="text-[10px] font-semibold text-slate-400">Vendor Portal</span>
+              <h1 className="font-extrabold text-base text-slate-900 leading-none ">
+                Twin6Rental
+              </h1>
+              <span className="text-[10px] font-semibold text-slate-400 block mt-0.5">Vendor Portal</span>
             </div>
-          </div>
+          </Link>
 
           {/* List New Item Button */}
           <button
@@ -272,11 +369,10 @@ export const VendorDashboard: React.FC = () => {
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id as any)}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition-all font-semibold ${
-                    isActive
-                      ? 'bg-slate-100 text-slate-900 font-extrabold shadow-2xs'
-                      : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
-                  }`}
+                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs transition-all font-semibold ${isActive
+                    ? 'bg-slate-100 text-slate-900 font-extrabold shadow-2xs'
+                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                    }`}
                 >
                   <ItemIcon className="w-4 h-4" />
                   <span>{item.label}</span>
@@ -290,22 +386,20 @@ export const VendorDashboard: React.FC = () => {
         <div className="space-y-1 border-t border-slate-100 pt-3">
           <button
             onClick={() => setActiveTab('settings')}
-            className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-              activeTab === 'settings'
-                ? 'bg-slate-100 text-slate-900 font-extrabold'
-                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
-            }`}
+            className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${activeTab === 'settings'
+              ? 'bg-slate-100 text-slate-900 font-extrabold'
+              : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+              }`}
           >
             <Settings className="w-4 h-4" />
             <span>Settings</span>
           </button>
           <button
             onClick={() => setActiveTab('support')}
-            className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-              activeTab === 'support'
-                ? 'bg-slate-100 text-slate-900 font-extrabold'
-                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
-            }`}
+            className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${activeTab === 'support'
+              ? 'bg-slate-100 text-slate-900 font-extrabold'
+              : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+              }`}
           >
             <HelpCircle className="w-4 h-4" />
             <span>Support</span>
@@ -350,16 +444,133 @@ export const VendorDashboard: React.FC = () => {
               <span>List New Item</span>
             </button>
 
-            <div className="flex items-center gap-2 border-l border-slate-200 pl-4">
-              <button className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors relative">
+            <div className="flex items-center gap-2 border-l border-slate-200 pl-4 relative">
+              <button
+                className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors relative"
+                title="Notifications"
+              >
                 <Bell className="w-5 h-5" />
                 <span className="w-2 h-2 rounded-full bg-red-500 absolute top-2 right-2 ring-2 ring-white"></span>
               </button>
-              <button className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors">
+
+              <button
+                onClick={() => setIsSupportModalOpen(true)}
+                className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors relative"
+                title="Send Message / Query to Admin"
+              >
                 <Mail className="w-5 h-5" />
+                <span className="w-2 h-2 rounded-full bg-blue-500 absolute top-2 right-2 ring-2 ring-white"></span>
               </button>
-              <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-bold text-xs text-slate-700 border border-slate-300 ml-1">
-                <UserCircle className="w-6 h-6 text-slate-700" />
+
+              {/* User Logo Button */}
+              <div className="relative">
+                <button
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  className="flex items-center gap-2 p-1 rounded-full hover:bg-slate-100 transition-all border border-slate-300 shadow-2xs ml-1 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  title="Vendor Profile & Store Settings"
+                >
+                  {profileForm.logoUrl || profileForm.profileImageUrl ? (
+                    <img
+                      src={profileForm.logoUrl || profileForm.profileImageUrl}
+                      alt="Vendor Logo"
+                      className="w-8 h-8 rounded-full object-cover border border-slate-300"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-black text-xs shadow-2xs">
+                      {user?.name?.slice(0, 2).toUpperCase() || 'VN'}
+                    </div>
+                  )}
+                </button>
+
+                {/* Hover / Click Vendor Settings Dashboard Popover Card */}
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 top-12 w-80 bg-white rounded-3xl shadow-2xl border border-slate-200 p-5 z-50 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+                    <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+                      {profileForm.logoUrl || profileForm.profileImageUrl ? (
+                        <img
+                          src={profileForm.logoUrl || profileForm.profileImageUrl}
+                          alt="Vendor Logo"
+                          className="w-12 h-12 rounded-2xl object-cover border border-slate-200 shadow-2xs"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-black text-sm shadow-xs">
+                          {user?.name?.slice(0, 2).toUpperCase() || 'VN'}
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-extrabold text-sm text-slate-900 truncate">
+                          {profileForm.companyName || user?.companyName || user?.name}
+                        </h4>
+                        <p className="text-xs text-slate-500 font-medium truncate">
+                          {user?.name} ({user?.email})
+                        </p>
+                        <span className="inline-block mt-1 px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-100 text-emerald-800 uppercase">
+                          ● VENDOR PORTAL
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5 text-xs text-slate-600 font-semibold bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
+                      <div className="flex justify-between">
+                        <span className="text-slate-400 font-extrabold">GSTIN:</span>
+                        <span className="font-mono text-slate-900 font-bold">
+                          {profileForm.gstNo || '27AAAAA0000A1Z5'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400 font-extrabold">Category:</span>
+                        <span className="text-slate-900 font-bold truncate max-w-[140px]">
+                          {profileForm.productCategory}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400 font-extrabold">Phone:</span>
+                        <span className="text-slate-900 font-bold">{profileForm.phone}</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1 pt-1">
+                      <button
+                        onClick={() => {
+                          setIsUserMenuOpen(false);
+                          setActiveTab('settings');
+                        }}
+                        className="w-full text-left px-3.5 py-2.5 rounded-xl font-extrabold text-xs text-slate-900 bg-slate-100 hover:bg-slate-200 flex items-center justify-between transition-colors shadow-2xs"
+                      >
+                        <span className="flex items-center gap-2">
+                          <Settings className="w-4 h-4 text-slate-700" />
+                          <span>Open Storefront Settings</span>
+                        </span>
+                        <span className="text-[10px] text-slate-500 font-black">➔</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setIsUserMenuOpen(false);
+                          setIsSupportModalOpen(true);
+                        }}
+                        className="w-full text-left px-3.5 py-2.5 rounded-xl font-bold text-xs text-slate-700 hover:bg-slate-100 flex items-center justify-between transition-colors"
+                      >
+                        <span className="flex items-center gap-2">
+                          <Mail className="w-4 h-4 text-slate-500" />
+                          <span>Send Admin Support Query</span>
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-extrabold">➔</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setIsUserMenuOpen(false);
+                          logout();
+                        }}
+                        className="w-full text-left px-3.5 py-2.5 rounded-xl font-bold text-xs text-rose-600 hover:bg-rose-50 flex items-center gap-2 transition-colors border-t border-slate-100 mt-1 pt-2"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>Sign Out</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -487,11 +698,10 @@ export const VendorDashboard: React.FC = () => {
                           setActiveTab('analytics');
                         }
                       }}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                        btn.active
-                          ? 'bg-white text-slate-950 shadow-md'
-                          : 'text-slate-400 hover:text-white hover:bg-slate-900'
-                      }`}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${btn.active
+                        ? 'bg-white text-slate-950 shadow-md'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                        }`}
                     >
                       {btn.label}
                     </button>
@@ -520,18 +730,16 @@ export const VendorDashboard: React.FC = () => {
                   <div className="flex items-center bg-white p-1 rounded-xl border border-slate-200 shadow-2xs">
                     <button
                       onClick={() => setInventoryViewMode('grid')}
-                      className={`p-2 rounded-lg transition-all ${
-                        inventoryViewMode === 'grid' ? 'bg-slate-100 text-slate-900 font-bold' : 'text-slate-400'
-                      }`}
+                      className={`p-2 rounded-lg transition-all ${inventoryViewMode === 'grid' ? 'bg-slate-100 text-slate-900 font-bold' : 'text-slate-400'
+                        }`}
                       title="Grid View"
                     >
                       <Grid className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => setInventoryViewMode('list')}
-                      className={`p-2 rounded-lg transition-all ${
-                        inventoryViewMode === 'list' ? 'bg-slate-100 text-slate-900 font-bold' : 'text-slate-400'
-                      }`}
+                      className={`p-2 rounded-lg transition-all ${inventoryViewMode === 'list' ? 'bg-slate-100 text-slate-900 font-bold' : 'text-slate-400'
+                        }`}
                       title="List View"
                     >
                       <List className="w-4 h-4" />
@@ -564,11 +772,10 @@ export const VendorDashboard: React.FC = () => {
                           className="w-full h-full object-contain filter drop-shadow-xs"
                         />
                         <span
-                          className={`absolute top-4 left-4 text-[10px] font-extrabold px-3 py-1 rounded-full border ${
-                            prod.stock_qty > 0 && prod.is_published
-                              ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
-                              : 'bg-rose-100 text-rose-800 border-rose-200'
-                          }`}
+                          className={`absolute top-4 left-4 text-[10px] font-extrabold px-3 py-1 rounded-full border ${prod.stock_qty > 0 && prod.is_published
+                            ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                            : 'bg-rose-100 text-rose-800 border-rose-200'
+                            }`}
                         >
                           ● {prod.stock_qty > 0 && prod.is_published ? 'In Stock' : 'Rented / Draft'}
                         </span>
@@ -600,7 +807,7 @@ export const VendorDashboard: React.FC = () => {
                         >
                           Edit
                         </button>
-                        
+
                         <div className="relative">
                           <button
                             onClick={() => setActiveProductMenuId(activeProductMenuId === prod.id ? null : prod.id)}
@@ -621,7 +828,7 @@ export const VendorDashboard: React.FC = () => {
                               >
                                 <span>Status</span>
                                 <span className={prod.is_published ? 'text-amber-600' : 'text-emerald-600'}>
-                                  {prod.is_published ? '📝 Set to Draft' : '🚀 Publish Item'}
+                                  {prod.is_published ? ' Set to Draft' : ' Publish Item'}
                                 </span>
                               </button>
 
@@ -634,7 +841,7 @@ export const VendorDashboard: React.FC = () => {
                               >
                                 <span>Inventory</span>
                                 <span className={prod.stock_qty > 0 ? 'text-rose-600' : 'text-emerald-600'}>
-                                  {prod.stock_qty > 0 ? '📦 Out of Stock' : '✅ Mark In Stock'}
+                                  {prod.stock_qty > 0 ? ' Out of Stock' : ' Mark In Stock'}
                                 </span>
                               </button>
 
@@ -755,17 +962,15 @@ export const VendorDashboard: React.FC = () => {
                   <div className="flex items-center bg-white p-1 rounded-xl border border-slate-200 shadow-2xs">
                     <button
                       onClick={() => setOrdersViewMode('table')}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                        ordersViewMode === 'table' ? 'bg-slate-900 text-white' : 'text-slate-500'
-                      }`}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${ordersViewMode === 'table' ? 'bg-slate-900 text-white' : 'text-slate-500'
+                        }`}
                     >
                       Table List
                     </button>
                     <button
                       onClick={() => setOrdersViewMode('kanban')}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                        ordersViewMode === 'kanban' ? 'bg-slate-900 text-white' : 'text-slate-500'
-                      }`}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${ordersViewMode === 'kanban' ? 'bg-slate-900 text-white' : 'text-slate-500'
+                        }`}
                     >
                       Kanban Board
                     </button>
@@ -871,22 +1076,301 @@ export const VendorDashboard: React.FC = () => {
           )}
 
           {/* ========================================================= */}
-          {/* TAB 6 & 7: SETTINGS & SUPPORT                             */}
+          {/* TAB 6: VENDOR SETTINGS (EDIT PROFILE, LOGO, PHONE, ETC)    */}
           {/* ========================================================= */}
-          {(activeTab === 'settings' || activeTab === 'support') && (
-            <div className="bg-white rounded-3xl p-8 border border-slate-200/80 shadow-xs space-y-6">
-              <h3 className="text-xl font-extrabold text-slate-900 capitalize">
-                Vendor {activeTab}
-              </h3>
-              <p className="text-xs text-slate-500 font-medium">
-                Manage your storefront profile, payout details, GST registration, and customer service resources.
-              </p>
+          {activeTab === 'settings' && (
+            <div className="space-y-8">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-xl font-extrabold text-slate-900">Vendor & Storefront Settings</h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Configure your business profile, edit store name, contact info, GSTIN, and location.
+                  </p>
+                </div>
+                {saveProfileSuccess && (
+                  <div className="px-4 py-2 rounded-xl bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-extrabold flex items-center gap-2 animate-in fade-in">
+                    <Check className="w-4 h-4 text-emerald-600" />
+                    <span>Store Profile Settings Saved Successfully!</span>
+                  </div>
+                )}
+              </div>
+
+              <form onSubmit={handleSaveProfile} className="space-y-8">
+                {/* Section 1: Storefront Details */}
+                <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-6">
+                  <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+                    <div className="w-10 h-10 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-black">
+                      <Building2 className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-base font-extrabold text-slate-900">Storefront & Business Information</h4>
+                      <p className="text-xs text-slate-500 font-medium">Displayed to customers on your public listings & invoices</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-extrabold text-slate-800 block">Company / Store Name *</label>
+                      <input
+                        type="text"
+                        required
+                        value={profileForm.companyName}
+                        onChange={(e) => setProfileForm({ ...profileForm, companyName: e.target.value })}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-slate-900 focus:bg-white focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-extrabold text-slate-800 block">GSTIN / Registration Number *</label>
+                      <input
+                        type="text"
+                        required
+                        value={profileForm.gstNo}
+                        onChange={(e) => setProfileForm({ ...profileForm, gstNo: e.target.value })}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-mono font-bold text-slate-900 focus:ring-2 focus:ring-slate-900 focus:bg-white focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-extrabold text-slate-800 block">Product Category / Industry</label>
+                      <input
+                        type="text"
+                        value={profileForm.productCategory}
+                        onChange={(e) => setProfileForm({ ...profileForm, productCategory: e.target.value })}
+                        placeholder="e.g. Cameras & Audio Equipment, EV Vehicles"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-slate-900 focus:bg-white focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-extrabold text-slate-800 block">Store Logo / Brand Image URL</label>
+                      <input
+                        type="url"
+                        value={profileForm.logoUrl}
+                        onChange={(e) => setProfileForm({ ...profileForm, logoUrl: e.target.value })}
+                        placeholder="https://example.com/logo.png"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-slate-900 focus:bg-white focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 2: Owner & Manager Contact Info */}
+                <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-6">
+                  <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+                    <div className="w-10 h-10 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-black">
+                      <UserIcon className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-base font-extrabold text-slate-900">Manager & Contact Details</h4>
+                      <p className="text-xs text-slate-500 font-medium">Personal details for account owner and notifications</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-extrabold text-slate-800 block">First Name *</label>
+                      <input
+                        type="text"
+                        required
+                        value={profileForm.firstName}
+                        onChange={(e) => setProfileForm({ ...profileForm, firstName: e.target.value })}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-slate-900 focus:bg-white focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-extrabold text-slate-800 block">Last Name *</label>
+                      <input
+                        type="text"
+                        required
+                        value={profileForm.lastName}
+                        onChange={(e) => setProfileForm({ ...profileForm, lastName: e.target.value })}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-slate-900 focus:bg-white focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-extrabold text-slate-800 block">Contact Phone Number *</label>
+                      <input
+                        type="tel"
+                        required
+                        value={profileForm.phone}
+                        onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                        placeholder="+91 98765 43210"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-slate-900 focus:bg-white focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-extrabold text-slate-800 block">Account Email *</label>
+                      <input
+                        type="email"
+                        required
+                        value={profileForm.email}
+                        onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-slate-900 focus:bg-white focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 3: Warehouse & Pickup Address */}
+                <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-6">
+                  <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+                    <div className="w-10 h-10 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-black">
+                      <MapPin className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-base font-extrabold text-slate-900">Warehouse & Pickup Location</h4>
+                      <p className="text-xs text-slate-500 font-medium">Default location where customers pick up or return rental items</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="md:col-span-2 space-y-1.5">
+                      <label className="text-xs font-extrabold text-slate-800 block">Street Address Line 1</label>
+                      <input
+                        type="text"
+                        value={profileForm.addressLine1}
+                        onChange={(e) => setProfileForm({ ...profileForm, addressLine1: e.target.value })}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-slate-900 focus:bg-white focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-extrabold text-slate-800 block">City</label>
+                      <input
+                        type="text"
+                        value={profileForm.city}
+                        onChange={(e) => setProfileForm({ ...profileForm, city: e.target.value })}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-slate-900 focus:bg-white focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-extrabold text-slate-800 block">State</label>
+                      <input
+                        type="text"
+                        value={profileForm.state}
+                        onChange={(e) => setProfileForm({ ...profileForm, state: e.target.value })}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-slate-900 focus:bg-white focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-extrabold text-slate-800 block">Pincode</label>
+                      <input
+                        type="text"
+                        value={profileForm.pincode}
+                        onChange={(e) => setProfileForm({ ...profileForm, pincode: e.target.value })}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-mono font-bold text-slate-900 focus:ring-2 focus:ring-slate-900 focus:bg-white focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Submit Button Bar */}
+                <div className="flex items-center justify-end gap-4 pt-2">
+                  <button
+                    type="submit"
+                    disabled={isSavingProfile}
+                    className="px-8 py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs flex items-center gap-2.5 shadow-md transition-all active:scale-[0.99] disabled:opacity-50"
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>{isSavingProfile ? 'Saving Settings...' : 'Save & Publish Storefront Profile'}</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* ========================================================= */}
+          {/* TAB 7: VENDOR SUPPORT & ADMIN QUERY CHANNEL               */}
+          {/* ========================================================= */}
+          {activeTab === 'support' && (
+            <div className="space-y-8">
+              {/* Header Banner */}
+              <div className="bg-slate-900 text-white rounded-3xl p-8 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="space-y-2 max-w-xl">
+                  <h3 className="text-2xl font-black tracking-tight flex items-center gap-2">
+                    <HelpCircle className="w-7 h-7 text-amber-400" />
+                    Vendor Support & Admin Help Desk
+                  </h3>
+                  <p className="text-slate-300 text-xs font-medium leading-relaxed">
+                    Have an error with an order, inventory listing, or invoice payment? Send a direct query message to the platform administration team.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setIsSupportModalOpen(true)}
+                  className="px-6 py-3.5 rounded-2xl bg-white hover:bg-slate-100 text-slate-950 font-black text-xs flex items-center gap-2 shadow-lg transition-all shrink-0 active:scale-[0.98]"
+                >
+                  <MessageSquare className="w-4 h-4 text-slate-900" />
+                  <span>Send Admin Query</span>
+                </button>
+              </div>
+
+              {/* Support Info Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-2xs space-y-3">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
+                    <AlertTriangle className="w-5 h-5" />
+                  </div>
+                  <h4 className="font-extrabold text-sm text-slate-900">Technical & Bug Support</h4>
+                  <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                    Encountered an error in rental state machine transitions or PDF generation? Report it directly to technical staff.
+                  </p>
+                  <button
+                    onClick={() => setIsSupportModalOpen(true)}
+                    className="text-xs font-extrabold text-slate-900 underline hover:text-slate-600 block pt-1"
+                  >
+                    Report Bug ➔
+                  </button>
+                </div>
+
+                <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-2xs space-y-3">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
+                    <DollarSign className="w-5 h-5" />
+                  </div>
+                  <h4 className="font-extrabold text-sm text-slate-900">Billing & Deposit Disputes</h4>
+                  <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                    Questions about security deposit product rates, late fee automated scanning, or vendor payouts.
+                  </p>
+                  <button
+                    onClick={() => setIsSupportModalOpen(true)}
+                    className="text-xs font-extrabold text-slate-900 underline hover:text-slate-600 block pt-1"
+                  >
+                    Inquire Billing ➔
+                  </button>
+                </div>
+
+                <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-2xs space-y-3">
+                  <div className="w-10 h-10 rounded-2xl bg-blue-100 text-blue-800 flex items-center justify-center font-bold">
+                    <ShieldCheck className="w-5 h-5" />
+                  </div>
+                  <h4 className="font-extrabold text-sm text-slate-900">Account & Verification</h4>
+                  <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                    Update your GST verification, request higher listing limits, or adjust storefront category settings.
+                  </p>
+                  <button
+                    onClick={() => setIsSupportModalOpen(true)}
+                    className="text-xs font-extrabold text-slate-900 underline hover:text-slate-600 block pt-1"
+                  >
+                    Account Verification ➔
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </main>
       </div>
 
       {/* Modals */}
+      {isSupportModalOpen && (
+        <VendorSupportModal onClose={() => setIsSupportModalOpen(false)} />
+      )}
+
       {pickupModalOrder && (
         <PickupReturnModal
           type="PICKUP"

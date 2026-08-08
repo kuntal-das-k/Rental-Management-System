@@ -244,4 +244,14 @@ export class AuthService {
 
     return updated;
   }
+
+  async getProfile(userId: string) {
+    const user = await userRepo.findById(userId);
+    if (!user) throw new Error('User not found');
+    return user;
+  }
+
+  async updateProfile(userId: string, data: any) {
+    return userRepo.updateProfile(userId, data);
+  }
 }

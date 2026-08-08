@@ -5,11 +5,19 @@ export type ProductType = 'GOODS' | 'SERVICE';
 export interface User {
   id: string;
   name: string;
+  first_name?: string;
+  last_name?: string;
   email: string;
   role: Role;
+  phone?: string;
   vendorId?: string;
   companyName?: string;
+  gstNo?: string;
+  productCategory?: string;
+  logoUrl?: string;
+  profile_image_url?: string;
   is_active?: boolean;
+  addresses?: { line1?: string; city?: string; state?: string; pincode?: string }[];
 }
 
 export interface Product {
