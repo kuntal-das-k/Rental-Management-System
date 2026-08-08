@@ -54,7 +54,11 @@ export const NavbarHeader: React.FC = () => {
         </nav>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <Link to="/wishlist" className="relative p-2 text-neutral-600 hover:text-neutral-900 transition-colors" title="Saved Wishlist">
+            <Heart className="w-4 h-4" />
+          </Link>
+
           <Link to="/checkout" className="relative p-2 text-neutral-600 hover:text-neutral-900 transition-colors" title="Cart">
             <ShoppingBag className="w-4 h-4" />
             {cartItems.length > 0 && (
@@ -67,17 +71,12 @@ export const NavbarHeader: React.FC = () => {
           {user ? (
             <div className="flex items-center gap-3">
               {user.role === 'CUSTOMER' && (
-                <>
-                  <Link to="/wishlist" className="p-2 text-neutral-600 hover:text-neutral-900 transition-colors" title="Saved Wishlist">
-                    <Heart className="w-4 h-4" />
-                  </Link>
-                  <Link
-                    to="/customer/orders"
-                    className="text-xs font-bold px-3 py-1.5 rounded-full bg-neutral-100 text-neutral-800 hover:bg-neutral-200 transition-colors"
-                  >
-                    My Orders
-                  </Link>
-                </>
+                <Link
+                  to="/customer/orders"
+                  className="text-xs font-bold px-3 py-1.5 rounded-full bg-neutral-100 text-neutral-800 hover:bg-neutral-200 transition-colors"
+                >
+                  My Orders
+                </Link>
               )}
 
               {user.role === 'VENDOR' && (

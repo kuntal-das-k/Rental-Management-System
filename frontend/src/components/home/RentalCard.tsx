@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Star, Heart, Plus, Bell, Check } from 'lucide-react';
+import { api } from '../../api/client';
 import { useCartStore } from '../../store/useCartStore';
 import { Product } from '../../types';
 
@@ -66,10 +67,15 @@ export const RentalCard: React.FC<RentalCardProps> = ({
     setTimeout(() => setAdded(false), 1500);
   };
 
-  const handleToggleWishlist = (e: React.MouseEvent) => {
+  const handleToggleWishlist = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsWishlisted(!isWishlisted);
+    try {
+      const res = await api.post('/wishlist/toggle', { productId: id });
+      setIsWishlisted(res.data.data.isWishlisted);
+    } catch {
+      setIsWishlisted(!isWishlisted);
+    }
   };
 
   return (

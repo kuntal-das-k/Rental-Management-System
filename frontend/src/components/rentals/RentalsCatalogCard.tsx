@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, ArrowRight } from 'lucide-react';
+import { api } from '../../api/client';
 import { useCartStore } from '../../store/useCartStore';
 import { Product } from '../../types';
 
@@ -58,10 +59,15 @@ export const RentalsCatalogCard: React.FC<CatalogCardProps> = ({
     });
   };
 
-  const toggleWishlist = (e: React.MouseEvent) => {
+  const toggleWishlist = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsWishlisted(!isWishlisted);
+    try {
+      const res = await api.post('/wishlist/toggle', { productId: id });
+      setIsWishlisted(res.data.data.isWishlisted);
+    } catch {
+      setIsWishlisted(!isWishlisted);
+    }
   };
 
   return (

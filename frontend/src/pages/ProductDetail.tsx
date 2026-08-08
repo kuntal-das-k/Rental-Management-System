@@ -18,6 +18,7 @@ import {
   Video,
   Eye,
   Cpu,
+  Heart,
 } from 'lucide-react';
 import { addDays, format } from 'date-fns';
 
@@ -33,6 +34,17 @@ export const ProductDetail: React.FC = () => {
   const [quantity, setQuantity] = useState<number>(1);
   const [couponInput, setCouponInput] = useState<string>('');
   const [couponMessage, setCouponMessage] = useState<{ text: string; error?: boolean } | null>(null);
+  const [isWishlisted, setIsWishlisted] = useState<boolean>(false);
+
+  const handleToggleWishlist = async () => {
+    if (!id) return;
+    try {
+      const res = await api.post('/wishlist/toggle', { productId: id });
+      setIsWishlisted(res.data.data.isWishlisted);
+    } catch {
+      setIsWishlisted(!isWishlisted);
+    }
+  };
 
   // Fetch product detail
   const { data: product, isLoading } = useQuery({
@@ -329,13 +341,27 @@ export const ProductDetail: React.FC = () => {
                 </div>
               </div>
 
-              <button
-                onClick={handleAddToCart}
-                className="w-full py-4 rounded-2xl bg-white hover:bg-slate-100 text-slate-950 font-extrabold text-xs tracking-wide flex items-center justify-center gap-2.5 shadow-lg transition-transform active:scale-[0.99]"
-              >
-                <ShoppingBag className="w-4 h-4 text-slate-950" />
-                <span>Proceed to Express Checkout</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleAddToCart}
+                  className="flex-1 py-4 rounded-2xl bg-white hover:bg-slate-100 text-slate-950 font-extrabold text-xs tracking-wide flex items-center justify-center gap-2.5 shadow-lg transition-transform active:scale-[0.99]"
+                >
+                  <ShoppingBag className="w-4 h-4 text-slate-950" />
+                  <span>Proceed to Express Checkout</span>
+                </button>
+
+                <button
+                  onClick={handleToggleWishlist}
+                  title="Save to Wishlist"
+                  className={`p-4 rounded-2xl border transition-all ${
+                    isWishlisted
+                      ? 'bg-rose-500 text-white border-rose-500 shadow-lg shadow-rose-500/30'
+                      : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-current' : ''}`} />
+                </button>
+              </div>
             </div>
           </div>
         </div>
