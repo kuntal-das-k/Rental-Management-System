@@ -13,6 +13,7 @@ import dashboardRoutes from './routes/dashboard.routes';
 import couponRoutes from './routes/coupon.routes';
 import wishlistRoutes from './routes/wishlist.routes';
 import notificationRoutes from './routes/notification.routes';
+import contactRoutes from './routes/contact.routes';
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.use('/api/v1/dashboard', dashboardRoutes);
 app.use('/api/v1/coupons', couponRoutes);
 app.use('/api/v1/wishlist', wishlistRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
+app.use('/api/v1/contact', contactRoutes);
 
 // Health check
 app.get('/api/v1/health', (req, res) => {

@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { NavbarHeader } from '../components/home/NavbarHeader';
-import { Mail, Phone, MapPin, Clock, CheckCircle2, Send } from 'lucide-react';
+import { api } from '../api/client';
+import { Mail, Phone, MapPin, Clock, CheckCircle2, Send, Loader2 } from 'lucide-react';
 
 export const ContactPage: React.FC = () => {
   const location = useLocation();
 
   const [formSubmitted, setFormSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -14,10 +18,23 @@ export const ContactPage: React.FC = () => {
     message: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.email || !formData.message) return;
-    setFormSubmitted(true);
+    setErrorMessage('');
+    if (!formData.name || !formData.email || !formData.message) {
+      setErrorMessage('Please fill in your name, email, and message.');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await api.post('/contact', formData);
+      setFormSubmitted(true);
+    } catch (err: any) {
+      setErrorMessage(err.response?.data?.error || 'Failed to send message. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
