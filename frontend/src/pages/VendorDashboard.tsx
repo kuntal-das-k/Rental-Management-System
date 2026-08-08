@@ -201,8 +201,37 @@ export const VendorDashboard: React.FC = () => {
   const overdueCount = ordersData.filter((o) => o.is_late).length;
   const totalRevenueSum = ordersData.reduce((sum, o) => sum + o.total_amount, 0);
 
+  // Deactivated Vendor Account Protection Overlay
+  if (user && user.is_active === false) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-4">
+        <div className="glass-panel p-8 rounded-3xl border border-red-500/40 text-center max-w-md space-y-5 shadow-2xl animate-in fade-in zoom-in-95">
+          <div className="w-16 h-16 rounded-full bg-red-500/10 text-red-400 border border-red-500/30 flex items-center justify-center mx-auto shadow-inner">
+            <AlertTriangle className="w-8 h-8" />
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-xl font-extrabold text-white">Vendor Account Deactivated</h2>
+            <p className="text-xs text-slate-400">
+              Your vendor profile <strong className="text-slate-200">({user.companyName || user.name})</strong> has been deactivated by the system administrator. You cannot perform portal operations or list products.
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              const { logout } = useAuthStore.getState();
+              logout();
+              window.location.href = '/login';
+            }}
+            className="w-full py-2.5 rounded-xl bg-red-500 hover:bg-red-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-red-500/20 transition-all"
+          >
+            Logout & Exit Portal
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex min-h-screen bg-[#F9FAFB] text-slate-900 font-sans">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-800 flex font-sans selection:bg-slate-900 selection:text-white">
       {/* ------------------------------------------------------------- */}
       {/* LEFT SIDEBAR NAVIGATION                                       */}
       {/* ------------------------------------------------------------- */}

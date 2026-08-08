@@ -5,7 +5,7 @@ export interface AuthenticatedRequest extends Request {
   user?: TokenPayload;
 }
 
-export function authenticateToken(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+export async function authenticateToken(req: AuthenticatedRequest, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(' ')[1];
 
@@ -19,6 +19,28 @@ export function authenticateToken(req: AuthenticatedRequest, res: Response, next
   try {
     const decoded = verifyAccessToken(token);
     req.user = decoded;
+
+    // Import prisma client dynamically to verify user active status
+    const { prisma } = require('../config');
+    const dbUser = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: { id: true, is_active: true },
+    });
+
+    if (!dbUser) {
+      return res.status(401).json({
+        success: false,
+        error: 'User account not found',
+      });
+    }
+
+    if (!dbUser.is_active) {
+      return res.status(403).json({
+        success: false,
+        error: 'Your account has been deactivated by an administrator. Please contact support.',
+      });
+    }
+
     next();
   } catch (err) {
     return res.status(401).json({

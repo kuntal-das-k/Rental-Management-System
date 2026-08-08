@@ -23,6 +23,10 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       useAuthStore.getState().logout();
+    } else if (error.response?.status === 403 && error.response?.data?.error?.includes('deactivated')) {
+      alert(error.response.data.error || 'Your account has been deactivated by an administrator.');
+      useAuthStore.getState().logout();
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   }
