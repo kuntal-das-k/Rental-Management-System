@@ -6,17 +6,18 @@ import { prisma } from '../config';
 const dashboardService = new DashboardService();
 
 export class DashboardController {
-  private async resolveVendorId(req: AuthenticatedRequest): Promise<string | undefined> {
-    const user = req.user!;
+  private resolveVendorId = async (req: AuthenticatedRequest): Promise<string | undefined> => {
+    const user = req.user;
+    if (!user) return req.query.vendorId as string;
     if (user.role === 'VENDOR') {
       if (user.vendorId) return user.vendorId;
       const v = await prisma.vendor.findUnique({ where: { user_id: user.userId } });
       return v?.id;
     }
     return req.query.vendorId as string;
-  }
+  };
 
-  async getMetrics(req: AuthenticatedRequest, res: Response) {
+  getMetrics = async (req: AuthenticatedRequest, res: Response) => {
     try {
       const vendorId = await this.resolveVendorId(req);
       const timeframe = (req.query.timeframe as string) || 'week';
@@ -25,9 +26,9 @@ export class DashboardController {
     } catch (err: any) {
       return res.status(400).json({ success: false, error: err.message });
     }
-  }
+  };
 
-  async getSchedulerEvents(req: AuthenticatedRequest, res: Response) {
+  getSchedulerEvents = async (req: AuthenticatedRequest, res: Response) => {
     try {
       const vendorId = await this.resolveVendorId(req);
       const targetDate = req.query.date ? new Date(req.query.date as string) : new Date();
@@ -36,9 +37,9 @@ export class DashboardController {
     } catch (err: any) {
       return res.status(400).json({ success: false, error: err.message });
     }
-  }
+  };
 
-  async getReporting(req: AuthenticatedRequest, res: Response) {
+  getReporting = async (req: AuthenticatedRequest, res: Response) => {
     try {
       const targetVendorId = await this.resolveVendorId(req);
       const { metric, from, to } = req.query;
@@ -52,5 +53,5 @@ export class DashboardController {
     } catch (err: any) {
       return res.status(400).json({ success: false, error: err.message });
     }
-  }
+  };
 }
