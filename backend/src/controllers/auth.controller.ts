@@ -55,8 +55,8 @@ export class AuthController {
   async toggleUserActive(req: AuthenticatedRequest, res: Response) {
     try {
       const { id } = req.params;
-      const { isActive } = req.body;
-      const updated = await authService.toggleUserActive(id, isActive);
+      const { isActive, reason, statusAction } = req.body;
+      const updated = await authService.toggleUserActive(id, isActive, reason, statusAction);
       return res.status(200).json({ success: true, data: updated });
     } catch (err: any) {
       return res.status(400).json({ success: false, error: err.message });

@@ -161,6 +161,7 @@ export class OrderRepository {
     type: 'RENTAL' | 'DEPOSIT' | 'LATE_FEE';
     method?: string;
     transaction_ref?: string;
+    status?: string;
   }) {
     return prisma.payment.create({
       data: {
@@ -169,7 +170,7 @@ export class OrderRepository {
         type: data.type,
         method: data.method || 'CREDIT_CARD',
         transaction_ref: data.transaction_ref || `TXN_${Date.now()}`,
-        status: 'COMPLETED',
+        status: data.status || 'COMPLETED',
       },
     });
   }

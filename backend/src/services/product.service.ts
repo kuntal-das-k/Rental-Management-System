@@ -16,7 +16,7 @@ export class ProductService {
   }
 
   async createProduct(vendorId: string, userRole: string, data: any) {
-    const isPublished = data.is_published !== undefined ? Boolean(data.is_published) : true;
+    const isPublished = typeof data.is_published === 'boolean' ? data.is_published : true;
 
     return productRepo.create({
       ...data,

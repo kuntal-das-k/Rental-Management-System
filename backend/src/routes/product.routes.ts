@@ -16,7 +16,7 @@ router.post('/', authenticateToken, requireRole(['VENDOR', 'ADMIN']), controller
 router.put('/:id', authenticateToken, requireRole(['VENDOR', 'ADMIN']), controller.updateProduct);
 router.delete('/:id', authenticateToken, requireRole(['VENDOR', 'ADMIN']), controller.deleteProduct);
 
-// Admin-only toggle publish route
-router.patch('/:id/publish', authenticateToken, requireRole(['ADMIN']), controller.togglePublish);
+// Vendor & Admin toggle publish route
+router.patch('/:id/publish', authenticateToken, requireRole(['VENDOR', 'ADMIN']), controller.togglePublish);
 
 export default router;
