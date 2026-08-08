@@ -35,18 +35,19 @@ export class ProductService {
       throw new Error('Unauthorized to modify this product');
     }
 
-    if (userRole !== 'ADMIN') {
-      delete data.is_published;
-    }
-
     return productRepo.update(id, data);
   }
 
-  async togglePublishStatus(id: string, isPublished: boolean) {
+  async togglePublishStatus(id: string, isPublished: boolean, userVendorId?: string, userRole?: string) {
     const existing = await productRepo.findById(id);
     if (!existing) {
       throw new Error('Product not found');
     }
+
+    if (userRole && userRole !== 'ADMIN' && existing.vendor_id !== userVendorId) {
+      throw new Error('Unauthorized to publish/unpublish this product');
+    }
+
     return productRepo.togglePublish(id, isPublished);
   }
 
