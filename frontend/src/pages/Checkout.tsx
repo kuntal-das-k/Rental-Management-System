@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { useCartStore } from '../store/useCartStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { Navbar } from '../components/Navbar';
@@ -8,6 +9,7 @@ import { ShieldCheck, Truck, Store, CreditCard, Lock, ArrowRight, Loader2 } from
 
 export const Checkout: React.FC = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user } = useAuthStore();
   const { items, couponCode, discountType, discountValue, pickupType, setPickupType, clearCart } = useCartStore();
 
@@ -87,6 +89,8 @@ export const Checkout: React.FC = () => {
       // 3. Confirm order & generate invoice
       await api.patch(`/orders/${newOrder.id}/confirm`);
       const invRes = await api.post(`/orders/${newOrder.id}/create-invoice`);
+
+      await queryClient.invalidateQueries();
 
       // 4. Simulate short delay for mocked payment processing
       setTimeout(() => {

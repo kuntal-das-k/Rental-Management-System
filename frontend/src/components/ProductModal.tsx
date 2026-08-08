@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Product } from '../types';
 import { X, Plus, Package } from 'lucide-react';
 import { api } from '../api/client';
@@ -11,6 +12,7 @@ interface ProductModalProps {
 
 export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, onSaveSuccess }) => {
   const isEditing = !!product;
+  const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({
     name: product?.name || '',
@@ -47,6 +49,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, on
         await api.post('/products', payload);
       }
 
+      await queryClient.invalidateQueries();
       onSaveSuccess();
       onClose();
     } catch (err: any) {

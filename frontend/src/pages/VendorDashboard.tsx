@@ -65,7 +65,8 @@ export const VendorDashboard: React.FC = () => {
   // Order State Action Handlers
   const handleSendQuotation = async (id: string) => {
     try {
-      await api.patch(`/orders/${id}/send-quotation`);
+      await api.patch(`/orders/${id}/quotation-sent`);
+      await queryClient.invalidateQueries();
       refetchOrders();
     } catch (err: any) {
       alert(err.response?.data?.error || 'Action failed');
@@ -75,6 +76,7 @@ export const VendorDashboard: React.FC = () => {
   const handleConfirmOrder = async (id: string) => {
     try {
       await api.patch(`/orders/${id}/confirm`);
+      await queryClient.invalidateQueries();
       refetchOrders();
     } catch (err: any) {
       alert(err.response?.data?.error || 'Action failed');
@@ -85,6 +87,7 @@ export const VendorDashboard: React.FC = () => {
     try {
       const res = await api.post(`/orders/${id}/create-invoice`);
       alert(`Invoice created: ${res.data.data.invoice_number}`);
+      await queryClient.invalidateQueries();
       refetchOrders();
     } catch (err: any) {
       alert(err.response?.data?.error || 'Action failed');
@@ -96,6 +99,7 @@ export const VendorDashboard: React.FC = () => {
     try {
       await api.patch(`/orders/${pickupModalOrder.id}/pickup`, { conditionNotes: notes });
       setPickupModalOrder(null);
+      await queryClient.invalidateQueries();
       refetchOrders();
     } catch (err: any) {
       alert(err.response?.data?.error || 'Pickup confirmation failed');
@@ -107,6 +111,7 @@ export const VendorDashboard: React.FC = () => {
     try {
       await api.patch(`/orders/${returnModalOrder.id}/return`, { conditionNotes: notes, conditionPass });
       setReturnModalOrder(null);
+      await queryClient.invalidateQueries();
       refetchOrders();
     } catch (err: any) {
       alert(err.response?.data?.error || 'Return confirmation failed');
@@ -116,9 +121,10 @@ export const VendorDashboard: React.FC = () => {
   const handleTogglePublishProduct = async (productId: string, isPublished: boolean) => {
     try {
       await api.patch(`/products/${productId}/publish`, { isPublished: !isPublished });
+      await queryClient.invalidateQueries();
       refetchProducts();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Publish toggle failed (Admin role required)');
+      alert(err.response?.data?.error || 'Publish toggle failed');
     }
   };
 
