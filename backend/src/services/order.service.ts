@@ -92,13 +92,15 @@ export class OrderService {
       items: validItems,
     });
 
+    const paymentMethod = data.paymentMethod || data.payment_method || 'CREDIT_CARD';
+
     // Record rental fee payment
     await orderRepo.createPayment({
       order_id: order.id,
       amount: Math.max(0, totalAmount - depositTotal),
       type: 'RENTAL',
       status: 'COMPLETED',
-      method: 'CREDIT_CARD',
+      method: paymentMethod,
       transaction_ref: `MOCK_RENTAL_TXN_${Date.now()}`,
     });
 
@@ -109,9 +111,22 @@ export class OrderService {
         amount: depositTotal,
         type: 'DEPOSIT',
         status: 'HELD',
-        method: 'CREDIT_CARD',
+        method: paymentMethod,
         transaction_ref: `DEP_HELD_${Date.now()}`,
       });
+    }
+
+    // In-Store Spot Rental: Confirm order, generate PDF invoice, and mark picked up on the spot
+    if (data.onTheSpot || data.inStoreRental) {
+      await orderRepo.updateState(order.id, 'SALES_ORDER');
+      await this.createInvoice(order.id);
+      await orderRepo.updateStockOnPickupOrReturn(order.id, false);
+      await orderRepo.addPickupReturnLog({
+        order_id: order.id,
+        type: 'PICKUP',
+        condition_notes: 'In-store rental: Confirmed, payment & security deposit collected, item handed over on the spot.',
+      });
+      return orderRepo.updateState(order.id, 'PICKED_UP');
     }
 
     return order;
