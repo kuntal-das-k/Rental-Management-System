@@ -83,7 +83,7 @@ export const VendorDashboard: React.FC = () => {
     queryKey: ['vendor-products'],
     queryFn: async () => {
       const res = await api.get('/products', {
-        params: { vendorId: user?.role === 'VENDOR' ? user.vendorId : undefined },
+        params: { vendorId: user?.role === 'VENDOR' ? user.vendorId : undefined, limit: 100 },
       });
       return (res.data.data as Product[]) || [];
     },

@@ -172,10 +172,10 @@ async function main() {
   // 4. Categories
   const catCamera = await prisma.category.create({ data: { name: 'Cameras & Audio', description: 'DSLRs, Cinema gear, microphones' } });
   const catEV = await prisma.category.create({ data: { name: 'E-Bikes & Scooters', description: 'Urban electric transport' } });
-  await prisma.category.create({ data: { name: 'Drones & Aerial Gear', description: '4K Drones, Gimbals, Aerial Rigs' } });
-  await prisma.category.create({ data: { name: 'Audio & Sound Systems', description: 'PA Speakers, Microphones, DJ Mixers' } });
-  await prisma.category.create({ data: { name: 'Tools & Construction Equipment', description: 'Power tools, Generators, Ladders' } });
-  await prisma.category.create({ data: { name: 'Event & Party Supplies', description: 'Tents, Lighting, Staging, Furniture' } });
+  const catDrone = await prisma.category.create({ data: { name: 'Drones & Aerial Gear', description: '4K Drones, Gimbals, Aerial Rigs' } });
+  const catAudio = await prisma.category.create({ data: { name: 'Audio & Sound Systems', description: 'PA Speakers, Microphones, DJ Mixers' } });
+  const catTools = await prisma.category.create({ data: { name: 'Tools & Construction Equipment', description: 'Power tools, Generators, Ladders' } });
+  const catEvent = await prisma.category.create({ data: { name: 'Event & Party Supplies', description: 'Tents, Lighting, Staging, Furniture' } });
   const catService = await prisma.category.create({ data: { name: 'Security & Ancillary Services', description: 'Deposits, Warranties, Insurance' } });
 
   // 5. Global Attributes & Values
@@ -184,7 +184,7 @@ async function main() {
       name: 'Brand',
       display_type: DisplayType.SELECT,
       values: {
-        create: [{ value: 'Sony' }, { value: 'Canon' }, { value: 'Super73' }, { value: 'Segway' }],
+        create: [{ value: 'Sony' }, { value: 'Canon' }, { value: 'Super73' }, { value: 'Segway' }, { value: 'DJI' }],
       },
     },
     include: { values: true },
@@ -274,7 +274,7 @@ async function main() {
     data: {
       vendor_id: vendorUser1.vendor_profile!.id,
       category_id: catCamera.id,
-      name: 'Canon EOS R5 Mirrorless',
+      name: 'Canon EOS R5 Mirrorless Body',
       description: '45MP 8K video mirrorless body with RF 24-70mm f/2.8 L IS USM lens.',
       product_type: ProductType.GOODS,
       sku: 'CAM-CANON-R5',
@@ -327,7 +327,118 @@ async function main() {
     },
   });
 
-  console.log('✅ Products seeded successfully.');
+  const prod4 = await prisma.product.create({
+    data: {
+      vendor_id: vendorUser1.vendor_profile!.id,
+      category_id: catDrone.id,
+      name: 'DJI Mavic 3 Pro Cine 4K Drone Kit',
+      description: 'Triple-camera flagship drone with Hasselblad 4/3 CMOS, Apple ProRes 422 HQ, 43 min flight time, and RC Pro Smart Controller.',
+      product_type: ProductType.GOODS,
+      sku: 'DRONE-DJI-MAVIC3',
+      stock_qty: 4,
+      sales_price: 3500,
+      cost_price: 1800,
+      is_published: true,
+      pickup_time: '09:00',
+      return_time: '18:00',
+      late_fee_per_unit: 600,
+      security_deposit_amount: 10000,
+      image_urls: JSON.stringify([
+        'https://images.unsplash.com/photo-1527977966376-1c8408f9f108?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=800&q=80',
+      ]),
+    },
+  });
+
+  const prod5 = await prisma.product.create({
+    data: {
+      vendor_id: vendorUser1.vendor_profile!.id,
+      category_id: catDrone.id,
+      name: 'DJI Mini 3 Pro Ultralight Drone',
+      description: 'Under-249g compact drone with 4K HDR video, true vertical shooting, tri-directional obstacle sensing, and 34 min battery.',
+      product_type: ProductType.GOODS,
+      sku: 'DRONE-DJI-MINI3',
+      stock_qty: 6,
+      sales_price: 1800,
+      cost_price: 900,
+      is_published: true,
+      pickup_time: '09:00',
+      return_time: '18:00',
+      late_fee_per_unit: 350,
+      security_deposit_amount: 5000,
+      image_urls: JSON.stringify([
+        'https://images.unsplash.com/photo-1507582020474-9a35b7d455d9?auto=format&fit=crop&w=800&q=80',
+      ]),
+    },
+  });
+
+  const prod6 = await prisma.product.create({
+    data: {
+      vendor_id: vendorUser2.vendor_profile!.id,
+      category_id: catEV.id,
+      name: 'Segway Ninebot Max G30 Electric Scooter',
+      description: 'Long-range electric kick scooter with 40-mile range, 18.6mph max speed, 10-inch pneumatic tires, and built-in fast charger.',
+      product_type: ProductType.GOODS,
+      sku: 'EV-SEGWAY-MAX',
+      stock_qty: 10,
+      sales_price: 900,
+      cost_price: 400,
+      is_published: true,
+      pickup_time: '08:00',
+      return_time: '20:00',
+      late_fee_per_unit: 200,
+      security_deposit_amount: 3000,
+      image_urls: JSON.stringify([
+        'https://images.unsplash.com/photo-1597047084897-51e81819a499?auto=format&fit=crop&w=800&q=80',
+      ]),
+    },
+  });
+
+  const prod7 = await prisma.product.create({
+    data: {
+      vendor_id: vendorUser1.vendor_profile!.id,
+      category_id: catAudio.id,
+      name: 'Sennheiser EW-D Wireless Lavalier Mic System',
+      description: 'Professional digital wireless lavalier microphone set for crystal-clear broadcast audio on film sets and interviews.',
+      product_type: ProductType.GOODS,
+      sku: 'AUD-SENN-EWD',
+      stock_qty: 8,
+      sales_price: 800,
+      cost_price: 350,
+      is_published: true,
+      pickup_time: '09:00',
+      return_time: '18:00',
+      late_fee_per_unit: 200,
+      security_deposit_amount: 3000,
+      image_urls: JSON.stringify([
+        'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=800&q=80',
+      ]),
+    },
+  });
+
+  const prod8 = await prisma.product.create({
+    data: {
+      vendor_id: vendorUser2.vendor_profile!.id,
+      category_id: catEvent.id,
+      name: 'Nora 3-Seater Charcoal Fabric Sofa',
+      description: 'Premium charcoal grey fabric sofa perfect for modern living spaces, photo shoots, and event lounges.',
+      product_type: ProductType.GOODS,
+      sku: 'FURN-SOFA-NORA',
+      stock_qty: 4,
+      sales_price: 1800,
+      cost_price: 800,
+      is_published: true,
+      pickup_time: '10:00',
+      return_time: '18:00',
+      late_fee_per_unit: 300,
+      security_deposit_amount: 5000,
+      image_urls: JSON.stringify([
+        'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80',
+      ]),
+    },
+  });
+
+  console.log('✅ All products seeded successfully.');
 
   // 9. Pricelists & Rules
   const defaultPricelist1 = await prisma.pricelist.create({
