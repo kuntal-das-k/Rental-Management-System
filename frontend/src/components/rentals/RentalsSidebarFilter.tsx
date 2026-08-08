@@ -138,17 +138,17 @@ export const RentalsSidebarFilter: React.FC<RentalsSidebarFilterProps> = ({
           <div className="space-y-3 pt-1">
             <input
               type="range"
-              min={10}
-              max={1000}
-              step={10}
+              min={500}
+              max={20000}
+              step={500}
               value={maxPrice}
               onChange={(e) => onMaxPriceChange(Number(e.target.value))}
               className="w-full accent-black bg-neutral-200 h-1.5 rounded-lg cursor-pointer"
             />
             <div className="flex items-center justify-between text-xs text-neutral-500 font-bold">
-              <span>₹10</span>
+              <span>₹500</span>
               <span className="text-neutral-900 font-extrabold">Max: ₹{maxPrice}+</span>
-              <span>₹1000+</span>
+              <span>₹20,000+</span>
             </div>
           </div>
         )}
