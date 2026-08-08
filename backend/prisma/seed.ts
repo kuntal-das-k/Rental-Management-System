@@ -215,10 +215,10 @@ async function main() {
       product_type: ProductType.SERVICE,
       sku: 'DEP-CAM-001',
       stock_qty: 999,
-      sales_price: 200,
+      sales_price: 8000,
       cost_price: 0,
       is_published: true,
-      security_deposit_amount: 200,
+      security_deposit_amount: 8000,
       image_urls: JSON.stringify(['https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80']),
     },
   });
@@ -232,10 +232,10 @@ async function main() {
       product_type: ProductType.SERVICE,
       sku: 'DEP-EV-002',
       stock_qty: 999,
-      sales_price: 350,
+      sales_price: 5000,
       cost_price: 0,
       is_published: true,
-      security_deposit_amount: 350,
+      security_deposit_amount: 5000,
       image_urls: JSON.stringify(['https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80']),
     },
   });
@@ -250,13 +250,13 @@ async function main() {
       product_type: ProductType.GOODS,
       sku: 'CAM-SONY-FX3',
       stock_qty: 5,
-      sales_price: 85,
-      cost_price: 40,
+      sales_price: 2500,
+      cost_price: 1200,
       is_published: true,
       pickup_time: '09:00',
       return_time: '18:00',
-      late_fee_per_unit: 25,
-      security_deposit_amount: 200,
+      late_fee_per_unit: 500,
+      security_deposit_amount: 8000,
       image_urls: JSON.stringify([
         'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80',
         'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=800&q=80',
@@ -279,13 +279,13 @@ async function main() {
       product_type: ProductType.GOODS,
       sku: 'CAM-CANON-R5',
       stock_qty: 3,
-      sales_price: 75,
-      cost_price: 35,
+      sales_price: 2200,
+      cost_price: 1000,
       is_published: true,
       pickup_time: '09:00',
       return_time: '18:00',
-      late_fee_per_unit: 20,
-      security_deposit_amount: 150,
+      late_fee_per_unit: 400,
+      security_deposit_amount: 6000,
       image_urls: JSON.stringify([
         'https://images.unsplash.com/photo-1519638399535-1b036603ac77?auto=format&fit=crop&w=800&q=80',
       ]),
@@ -307,13 +307,13 @@ async function main() {
       product_type: ProductType.GOODS,
       sku: 'EV-SUPER73-S2',
       stock_qty: 8,
-      sales_price: 45,
-      cost_price: 20,
+      sales_price: 1500,
+      cost_price: 700,
       is_published: true,
       pickup_time: '08:00',
       return_time: '20:00',
-      late_fee_per_unit: 15,
-      security_deposit_amount: 350,
+      late_fee_per_unit: 300,
+      security_deposit_amount: 5000,
       image_urls: JSON.stringify([
         'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=800&q=80',
         'https://images.unsplash.com/photo-1571068316344-75bc76f77890?auto=format&fit=crop&w=800&q=80',
@@ -358,7 +358,7 @@ async function main() {
           {
             product_id: prod3.id,
             price_type: PriceType.FIXED,
-            value: 40,
+            value: 1200,
             min_qty: 5,
           },
         ],
@@ -373,9 +373,9 @@ async function main() {
     data: {
       product_id: prod1.id,
       basis: FeeBasis.DAILY,
-      rate: 25,
+      rate: 500,
       grace_period: 0,
-      max_cap: 300,
+      max_cap: 5000,
     },
   });
 
@@ -383,9 +383,9 @@ async function main() {
     data: {
       product_id: null,
       basis: FeeBasis.DAILY,
-      rate: 15,
+      rate: 300,
       grace_period: 0,
-      max_cap: 200,
+      max_cap: 3000,
     },
   });
 
@@ -406,7 +406,7 @@ async function main() {
     data: {
       code: 'FLAT500',
       discount_type: DiscountType.FIXED,
-      discount_value: 20,
+      discount_value: 500,
       valid_from: new Date('2026-01-01'),
       valid_to: new Date('2027-12-31'),
       usage_limit: 100,
@@ -444,17 +444,17 @@ async function main() {
       state: 'SALES_ORDER',
       scheduled_pickup_at: inTwoDays,
       scheduled_return_at: inFiveDays,
-      total_amount: 425.00,
+      total_amount: 7500.00,
       created_at: threeDaysAgo,
       order_items: {
         create: [
-          { product_id: prod1.id, quantity: 1, unit_price: 85.00, line_total: 425.00 }
+          { product_id: prod1.id, quantity: 1, unit_price: 2500.00, line_total: 7500.00 }
         ]
       },
       payments: {
         create: [
-          { amount: 425.00, type: 'RENTAL', status: 'COMPLETED', method: 'CREDIT_CARD', transaction_ref: 'TXN-90123' },
-          { amount: 200.00, type: 'DEPOSIT', status: 'COMPLETED', method: 'CREDIT_CARD', transaction_ref: 'DEP-90123' }
+          { amount: 7500.00, type: 'RENTAL', status: 'COMPLETED', method: 'CREDIT_CARD', transaction_ref: 'TXN-90123' },
+          { amount: 8000.00, type: 'DEPOSIT', status: 'COMPLETED', method: 'CREDIT_CARD', transaction_ref: 'DEP-90123' }
         ]
       }
     }
@@ -468,17 +468,17 @@ async function main() {
       state: 'PICKED_UP',
       scheduled_pickup_at: twoDaysAgo,
       scheduled_return_at: todayEnd,
-      total_amount: 225.00,
+      total_amount: 4500.00,
       created_at: twoDaysAgo,
       order_items: {
         create: [
-          { product_id: prod3.id, quantity: 1, unit_price: 45.00, line_total: 225.00 }
+          { product_id: prod3.id, quantity: 1, unit_price: 1500.00, line_total: 4500.00 }
         ]
       },
       payments: {
         create: [
-          { amount: 225.00, type: 'RENTAL', status: 'COMPLETED', method: 'CREDIT_CARD', transaction_ref: 'TXN-90124' },
-          { amount: 350.00, type: 'DEPOSIT', status: 'COMPLETED', method: 'CREDIT_CARD', transaction_ref: 'DEP-90124' }
+          { amount: 4500.00, type: 'RENTAL', status: 'COMPLETED', method: 'CREDIT_CARD', transaction_ref: 'TXN-90124' },
+          { amount: 5000.00, type: 'DEPOSIT', status: 'COMPLETED', method: 'CREDIT_CARD', transaction_ref: 'DEP-90124' }
         ]
       }
     }
@@ -493,18 +493,18 @@ async function main() {
       scheduled_pickup_at: threeDaysAgo,
       scheduled_return_at: yesterday,
       is_late: true,
-      total_amount: 300.00,
+      total_amount: 8800.00,
       created_at: threeDaysAgo,
       order_items: {
         create: [
-          { product_id: prod2.id, quantity: 1, unit_price: 75.00, line_total: 300.00 }
+          { product_id: prod2.id, quantity: 1, unit_price: 2200.00, line_total: 8800.00 }
         ]
       },
       payments: {
         create: [
-          { amount: 300.00, type: 'RENTAL', status: 'COMPLETED', method: 'CREDIT_CARD', transaction_ref: 'TXN-90125' },
-          { amount: 150.00, type: 'DEPOSIT', status: 'COMPLETED', method: 'CREDIT_CARD', transaction_ref: 'DEP-90125' },
-          { amount: 45.00, type: 'LATE_FEE', status: 'COMPLETED', method: 'CREDIT_CARD', transaction_ref: 'FEE-90125' }
+          { amount: 8800.00, type: 'RENTAL', status: 'COMPLETED', method: 'CREDIT_CARD', transaction_ref: 'TXN-90125' },
+          { amount: 6000.00, type: 'DEPOSIT', status: 'COMPLETED', method: 'CREDIT_CARD', transaction_ref: 'DEP-90125' },
+          { amount: 400.00, type: 'LATE_FEE', status: 'COMPLETED', method: 'CREDIT_CARD', transaction_ref: 'FEE-90125' }
         ]
       }
     }
@@ -519,16 +519,16 @@ async function main() {
       scheduled_pickup_at: threeDaysAgo,
       scheduled_return_at: yesterday,
       actual_return_at: yesterday,
-      total_amount: 340.00,
+      total_amount: 10000.00,
       created_at: threeDaysAgo,
       order_items: {
         create: [
-          { product_id: prod1.id, quantity: 1, unit_price: 85.00, line_total: 340.00 }
+          { product_id: prod1.id, quantity: 1, unit_price: 2500.00, line_total: 10000.00 }
         ]
       },
       payments: {
         create: [
-          { amount: 340.00, type: 'RENTAL', status: 'COMPLETED', method: 'CREDIT_CARD', transaction_ref: 'TXN-90126' }
+          { amount: 10000.00, type: 'RENTAL', status: 'COMPLETED', method: 'CREDIT_CARD', transaction_ref: 'TXN-90126' }
         ]
       }
     }
@@ -542,11 +542,11 @@ async function main() {
       state: 'QUOTATION',
       scheduled_pickup_at: inTwoDays,
       scheduled_return_at: inFiveDays,
-      total_amount: 180.00,
+      total_amount: 6000.00,
       created_at: now,
       order_items: {
         create: [
-          { product_id: prod3.id, quantity: 1, unit_price: 45.00, line_total: 180.00 }
+          { product_id: prod3.id, quantity: 1, unit_price: 1500.00, line_total: 6000.00 }
         ]
       }
     }

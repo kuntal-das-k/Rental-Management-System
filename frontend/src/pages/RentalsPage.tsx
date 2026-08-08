@@ -18,7 +18,7 @@ export const RentalsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedDuration, setSelectedDuration] = useState('Monthly');
-  const [maxPrice, setMaxPrice] = useState(1000);
+  const [maxPrice, setMaxPrice] = useState(20000);
   const [sortOption, setSortOption] = useState('Recommended');
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -37,7 +37,7 @@ export const RentalsPage: React.FC = () => {
       id: 'prod-sony-alpha-01',
       title: 'Sony Alpha a7 IV Mirrorless Camera',
       description: 'Professional hybrid camera with 33MP full-frame sensor and 4K video recording.',
-      price: 45,
+      price: 2200,
       billingCycle: '/ day',
       isNew: true,
       imageUrl: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80',
@@ -46,7 +46,7 @@ export const RentalsPage: React.FC = () => {
       id: 'prod-larsen-sofa-02',
       title: 'Larsen Charcoal 3-Seater Sofa',
       description: 'Premium fabric blend with high-density foam cushioning for refined living.',
-      price: 120,
+      price: 1800,
       billingCycle: '/ month',
       colorSwatches: ['#3a3b3c', '#e3d7c5', '#9ea5b1'],
       imageUrl: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80',
@@ -55,7 +55,7 @@ export const RentalsPage: React.FC = () => {
       id: 'prod-macbook-m3-03',
       title: 'MacBook Pro 16" M3 Max',
       description: 'Ultimate workstation for creatives. 64GB RAM, 2TB SSD storage.',
-      price: 35,
+      price: 4500,
       billingCycle: '/ day',
       imageUrl: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800&q=80',
     },
@@ -63,7 +63,7 @@ export const RentalsPage: React.FC = () => {
       id: 'prod-super73-04',
       title: 'Super73-S2 Electric Cruiser Bike',
       description: 'High-performance electric motorbike-styled cruiser with 75+ mile range.',
-      price: 45,
+      price: 1500,
       billingCycle: '/ day',
       isNew: true,
       imageUrl: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=800&q=80',
