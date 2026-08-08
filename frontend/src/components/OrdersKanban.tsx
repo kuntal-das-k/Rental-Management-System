@@ -13,11 +13,11 @@ interface OrdersKanbanProps {
 }
 
 const KANBAN_COLUMNS: { state: OrderState; title: string; color: string; icon: any }[] = [
-  { state: 'QUOTATION', title: 'Quotations', color: 'border-slate-700 bg-slate-900/50 text-slate-300', icon: FileText },
-  { state: 'QUOTATION_SENT', title: 'Quotation Sent', color: 'border-cyan-500/40 bg-cyan-950/20 text-cyan-400', icon: Send },
-  { state: 'SALES_ORDER', title: 'Sales Orders', color: 'border-blue-500/40 bg-blue-950/20 text-blue-400', icon: CheckCircle2 },
-  { state: 'PICKED_UP', title: 'Picked Up (Active)', color: 'border-amber-500/40 bg-amber-950/20 text-amber-400', icon: Truck },
-  { state: 'RETURNED', title: 'Returned', color: 'border-emerald-500/40 bg-emerald-950/20 text-emerald-400', icon: RotateCcw },
+  { state: 'QUOTATION', title: 'Quotations', color: 'border-slate-200 bg-slate-100 text-slate-700', icon: FileText },
+  { state: 'QUOTATION_SENT', title: 'Quotation Sent', color: 'border-sky-200 bg-sky-50 text-sky-800', icon: Send },
+  { state: 'SALES_ORDER', title: 'Sales Orders', color: 'border-blue-200 bg-blue-50 text-blue-800', icon: CheckCircle2 },
+  { state: 'PICKED_UP', title: 'Picked Up (Active)', color: 'border-amber-200 bg-amber-50 text-amber-800', icon: Truck },
+  { state: 'RETURNED', title: 'Returned', color: 'border-emerald-200 bg-emerald-50 text-emerald-800', icon: RotateCcw },
 ];
 
 export const OrdersKanban: React.FC<OrdersKanbanProps> = ({
@@ -36,14 +36,14 @@ export const OrdersKanban: React.FC<OrdersKanbanProps> = ({
         const ColumnIcon = col.icon;
 
         return (
-          <div key={col.state} className="glass-panel rounded-2xl p-3 border border-slate-800 flex flex-col min-w-[260px]">
+          <div key={col.state} className="bg-white rounded-3xl p-3.5 border border-slate-200/80 shadow-xs flex flex-col min-w-[260px]">
             {/* Column Header */}
-            <div className={`flex items-center justify-between p-2.5 rounded-xl border mb-3 ${col.color}`}>
-              <div className="flex items-center gap-2 font-bold text-xs">
+            <div className={`flex items-center justify-between p-3 rounded-2xl border mb-3 ${col.color}`}>
+              <div className="flex items-center gap-2 font-extrabold text-xs">
                 <ColumnIcon className="w-4 h-4" />
                 <span>{col.title}</span>
               </div>
-              <span className="text-xs font-extrabold px-2 py-0.5 rounded-full bg-slate-950/60">
+              <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-white/80 border border-slate-200 text-slate-900 shadow-2xs">
                 {colOrders.length}
               </span>
             </div>
@@ -51,44 +51,44 @@ export const OrdersKanban: React.FC<OrdersKanbanProps> = ({
             {/* Column Order Cards */}
             <div className="flex-1 space-y-3 overflow-y-auto max-h-[600px] pr-1">
               {colOrders.length === 0 ? (
-                <div className="text-center py-8 text-xs text-slate-600 border border-dashed border-slate-800 rounded-xl">
+                <div className="text-center py-10 text-xs text-slate-400 border-2 border-dashed border-slate-200 rounded-2xl">
                   No orders in this state
                 </div>
               ) : (
                 colOrders.map((order) => (
                   <div
                     key={order.id}
-                    className="glass-card rounded-xl p-3.5 border cursor-pointer group hover:border-cyan-500/50"
+                    className="bg-slate-50/80 rounded-2xl p-4 border border-slate-200/80 cursor-pointer group hover:border-slate-400 hover:shadow-xs transition-all space-y-2"
                     onClick={() => onSelectOrder(order)}
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-[11px] font-mono text-cyan-400 font-bold">
-                        #{order.id.slice(0, 8)}
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-mono text-slate-900 font-extrabold">
+                        #{order.id.slice(0, 8).toUpperCase()}
                       </span>
                       {order.is_late && (
-                        <span className="flex items-center gap-1 text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/30">
+                        <span className="flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-red-100 text-red-800 border border-red-200">
                           <AlertTriangle className="w-3 h-3" />
                           LATE
                         </span>
                       )}
                     </div>
 
-                    <h4 className="text-xs font-bold text-slate-200 line-clamp-1 group-hover:text-cyan-300">
+                    <h4 className="text-xs font-bold text-slate-900 line-clamp-1 group-hover:text-slate-700">
                       {order.customer?.name || 'Customer'}
                     </h4>
 
-                    <div className="text-[11px] text-slate-400 my-1.5 space-y-0.5">
-                      <p className="line-clamp-1 font-medium text-slate-300">
+                    <div className="text-[11px] text-slate-500 space-y-0.5">
+                      <p className="line-clamp-1 font-semibold text-slate-700">
                         {order.order_items?.[0]?.product?.name || 'Rental Item'}
                       </p>
-                      <p>
+                      <p className="text-[10px]">
                         {new Date(order.scheduled_pickup_at).toLocaleDateString()} -{' '}
                         {new Date(order.scheduled_return_at).toLocaleDateString()}
                       </p>
                     </div>
 
-                    <div className="flex items-center justify-between pt-2 border-t border-slate-800/80 mt-2">
-                      <span className="text-xs font-extrabold text-slate-100">
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-200/80 mt-2">
+                      <span className="text-xs font-black text-slate-900">
                         ${order.total_amount.toFixed(2)}
                       </span>
 
@@ -97,7 +97,7 @@ export const OrdersKanban: React.FC<OrdersKanbanProps> = ({
                         {order.state === 'QUOTATION' && (
                           <button
                             onClick={() => onSendQuotation(order.id)}
-                            className="px-2 py-1 text-[10px] font-bold bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30 rounded"
+                            className="px-2.5 py-1 text-[10px] font-bold bg-sky-100 text-sky-800 hover:bg-sky-200 border border-sky-300 rounded-lg transition-colors"
                           >
                             Send
                           </button>
@@ -105,7 +105,7 @@ export const OrdersKanban: React.FC<OrdersKanbanProps> = ({
                         {order.state === 'QUOTATION_SENT' && (
                           <button
                             onClick={() => onConfirmOrder(order.id)}
-                            className="px-2 py-1 text-[10px] font-bold bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 rounded"
+                            className="px-2.5 py-1 text-[10px] font-bold bg-blue-100 text-blue-800 hover:bg-blue-200 border border-blue-300 rounded-lg transition-colors"
                           >
                             Confirm
                           </button>
@@ -114,14 +114,14 @@ export const OrdersKanban: React.FC<OrdersKanbanProps> = ({
                           <>
                             <button
                               onClick={() => onCreateInvoice(order.id)}
-                              className="p-1 text-[10px] bg-slate-800 text-slate-300 hover:bg-slate-700 rounded"
+                              className="p-1 text-slate-600 hover:text-slate-900 transition-colors"
                               title="Create Invoice"
                             >
                               <FileSpreadsheet className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => onOpenPickupModal(order)}
-                              className="px-2 py-1 text-[10px] font-bold bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 rounded"
+                              className="px-2.5 py-1 text-[10px] font-bold bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-300 rounded-lg transition-colors"
                             >
                               Pickup
                             </button>
@@ -130,7 +130,7 @@ export const OrdersKanban: React.FC<OrdersKanbanProps> = ({
                         {order.state === 'PICKED_UP' && (
                           <button
                             onClick={() => onOpenReturnModal(order)}
-                            className="px-2 py-1 text-[10px] font-bold bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 rounded"
+                            className="px-2.5 py-1 text-[10px] font-bold bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300 rounded-lg transition-colors"
                           >
                             Return
                           </button>

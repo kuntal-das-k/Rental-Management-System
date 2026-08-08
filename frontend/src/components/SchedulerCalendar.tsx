@@ -1,7 +1,15 @@
 import React, { useState } from 'react';
 import { Order } from '../types';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, AlertTriangle } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth, addMonths, subMonths } from 'date-fns';
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  isSameDay,
+  addMonths,
+  subMonths,
+} from 'date-fns';
 
 interface SchedulerCalendarProps {
   orders: Order[];
@@ -11,28 +19,25 @@ interface SchedulerCalendarProps {
 export const SchedulerCalendar: React.FC<SchedulerCalendarProps> = ({ orders, onSelectOrder }) => {
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [viewMode, setViewMode] = useState<'month' | 'week'>('month');
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
-  // Get status color tag
+  // Determine badge for order on specific date
   const getStatusBadge = (order: Order, date: Date) => {
     const pickupDate = new Date(order.scheduled_pickup_at);
     const returnDate = new Date(order.scheduled_return_at);
     const isPickupDay = isSameDay(pickupDate, date);
-    const isReturnDay = isSameDay(returnDate, date);
 
     if (order.is_late) {
-      return { label: 'Late Delivery', bg: 'bg-red-500/20 text-red-400 border-red-500/40' };
+      return { label: 'Late', bg: 'bg-red-50 text-red-700 border-red-200', dot: 'bg-red-500' };
     }
-    if (isPickupDay && order.state === 'SALES_ORDER') {
-      return { label: 'Pick up', bg: 'bg-amber-500/20 text-amber-400 border-amber-500/40' };
+    if (isPickupDay) {
+      return { label: 'Pickup', bg: 'bg-slate-900 text-white border-slate-900', dot: 'bg-slate-900' };
     }
-    if (isReturnDay) {
-      return { label: 'Due Return', bg: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40' };
-    }
-    return { label: 'Booked', bg: 'bg-blue-500/20 text-blue-400 border-blue-500/40' };
+    return { label: 'Due Return', bg: 'bg-slate-100 text-slate-700 border-slate-200', dot: 'bg-slate-400' };
   };
 
   const selectedDayOrders = orders.filter((o) => {
@@ -46,56 +51,62 @@ export const SchedulerCalendar: React.FC<SchedulerCalendarProps> = ({ orders, on
   });
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Calendar Grid */}
-      <div className="lg:col-span-2 glass-panel rounded-2xl p-6 border border-slate-800">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
-            <CalendarIcon className="w-5 h-5 text-cyan-400" />
-            Rental Scheduler Calendar
-          </h3>
-
-          <div className="flex items-center gap-3">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      {/* LEFT COLUMN: Calendar Grid */}
+      <div className="lg:col-span-8 bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-6">
+        {/* Controls Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
             <button
               onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-              className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200"
+              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <span className="text-sm font-extrabold text-slate-200 min-w-[120px] text-center">
+            <h3 className="text-lg font-extrabold text-slate-900">
               {format(currentMonth, 'MMMM yyyy')}
-            </span>
+            </h3>
             <button
               onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-              className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200"
+              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
+
+          <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+            <button
+              onClick={() => setViewMode('month')}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                viewMode === 'month' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-500'
+              }`}
+            >
+              Month
+            </button>
+            <button
+              onClick={() => setViewMode('week')}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                viewMode === 'week' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-500'
+              }`}
+            >
+              Week
+            </button>
+          </div>
         </div>
 
-        {/* Legend */}
-        <div className="flex flex-wrap items-center gap-3 mb-4 text-[11px] font-semibold">
-          <span className="flex items-center gap-1.5 text-blue-400">
-            <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Booked
-          </span>
-          <span className="flex items-center gap-1.5 text-amber-400">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Pick up
-          </span>
-          <span className="flex items-center gap-1.5 text-cyan-400">
-            <span className="w-2.5 h-2.5 rounded-full bg-cyan-500"></span> Due Return
-          </span>
-          <span className="flex items-center gap-1.5 text-red-400">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span> Late Delivery
-          </span>
+        {/* Days of Week Header */}
+        <div className="grid grid-cols-7 gap-1 text-center font-bold text-xs uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-3">
+          <span>SUN</span>
+          <span>MON</span>
+          <span>TUE</span>
+          <span>WED</span>
+          <span>THU</span>
+          <span>FRI</span>
+          <span>SAT</span>
         </div>
 
-        {/* Calendar Grid Days */}
-        <div className="grid grid-cols-7 gap-1 text-center font-bold text-[11px] text-slate-500 mb-2">
-          <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
-        </div>
-
-        <div className="grid grid-cols-7 gap-1.5">
+        {/* Calendar Cells */}
+        <div className="grid grid-cols-7 gap-2">
           {days.map((day) => {
             const dayOrders = orders.filter((o) => {
               const pDate = new Date(o.scheduled_pickup_at);
@@ -104,22 +115,23 @@ export const SchedulerCalendar: React.FC<SchedulerCalendarProps> = ({ orders, on
             });
 
             const isSelected = isSameDay(day, selectedDate);
+            const isTodayDay = isSameDay(day, new Date());
 
             return (
               <button
                 key={day.toISOString()}
                 onClick={() => setSelectedDate(day)}
-                className={`min-h-[70px] p-1.5 rounded-xl border text-left flex flex-col justify-between transition-all ${
+                className={`min-h-[85px] p-2 rounded-2xl border text-left flex flex-col justify-between transition-all ${
                   isSelected
-                    ? 'border-cyan-500 bg-cyan-500/10 ring-1 ring-cyan-500'
-                    : 'border-slate-800/80 bg-slate-900/40 hover:bg-slate-800/60'
+                    ? 'border-slate-900 bg-slate-50 ring-2 ring-slate-900/10 shadow-xs'
+                    : 'border-slate-200/80 bg-white hover:bg-slate-50/70'
                 }`}
               >
                 <span
-                  className={`text-xs font-bold ${
-                    isSameDay(day, new Date())
-                      ? 'w-5 h-5 rounded-full bg-cyan-500 text-slate-950 flex items-center justify-center'
-                      : 'text-slate-300'
+                  className={`text-xs font-extrabold ${
+                    isTodayDay
+                      ? 'w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center'
+                      : 'text-slate-800'
                   }`}
                 >
                   {format(day, 'd')}
@@ -131,14 +143,14 @@ export const SchedulerCalendar: React.FC<SchedulerCalendarProps> = ({ orders, on
                     return (
                       <div
                         key={ord.id}
-                        className={`text-[9px] font-extrabold truncate px-1 py-0.5 rounded border ${badge.bg}`}
+                        className={`text-[9px] font-extrabold truncate px-1.5 py-0.5 rounded-lg border ${badge.bg}`}
                       >
-                        {ord.customer?.name || 'Order'}
+                        {badge.label} ({dayOrders.length})
                       </div>
                     );
                   })}
                   {dayOrders.length > 2 && (
-                    <span className="text-[9px] font-bold text-slate-500 block">
+                    <span className="text-[9px] font-bold text-slate-400 block px-1">
                       +{dayOrders.length - 2} more
                     </span>
                   )}
@@ -149,50 +161,74 @@ export const SchedulerCalendar: React.FC<SchedulerCalendarProps> = ({ orders, on
         </div>
       </div>
 
-      {/* Selected Day Bookings Detail Drawer */}
-      <div className="glass-panel rounded-2xl p-6 border border-slate-800 flex flex-col">
-        <h4 className="text-sm font-bold text-slate-100 mb-1 flex items-center gap-2">
-          <Clock className="w-4 h-4 text-cyan-400" />
-          Bookings on {format(selectedDate, 'MMMM d, yyyy')}
-        </h4>
-        <p className="text-xs text-slate-400 mb-4">{selectedDayOrders.length} active rental events</p>
+      {/* RIGHT COLUMN: Selected Day Events & Legend */}
+      <div className="lg:col-span-4 space-y-6">
+        {/* Selected Date Event List Card */}
+        <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-5">
+          <div>
+            <h3 className="text-base font-black text-slate-900">
+              {format(selectedDate, 'MMMM d, yyyy')}
+            </h3>
+            <p className="text-xs text-slate-500 font-medium">
+              {selectedDayOrders.length} Total Events Scheduled
+            </p>
+          </div>
 
-        <div className="flex-1 space-y-3 overflow-y-auto pr-1">
-          {selectedDayOrders.length === 0 ? (
-            <div className="text-center py-12 text-slate-500 text-xs border border-dashed border-slate-800 rounded-xl">
-              No pickups, returns, or active rentals scheduled for this date.
+          <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
+            {selectedDayOrders.length === 0 ? (
+              <div className="text-center py-10 text-slate-400 text-xs border-2 border-dashed border-slate-200 rounded-2xl">
+                No pickups, returns, or active rentals scheduled for this date.
+              </div>
+            ) : (
+              selectedDayOrders.map((ord) => {
+                const badge = getStatusBadge(ord, selectedDate);
+                return (
+                  <div
+                    key={ord.id}
+                    onClick={() => onSelectOrder(ord)}
+                    className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80 hover:border-slate-400 transition-all cursor-pointer space-y-2"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border ${badge.bg}`}>
+                        {badge.label.toUpperCase()}
+                      </span>
+                      <span className="text-[11px] font-bold text-slate-400">
+                        {format(new Date(ord.scheduled_pickup_at), 'hh:mm a')}
+                      </span>
+                    </div>
+
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900">
+                        Ord #{ord.id.slice(0, 5).toUpperCase()} - {ord.order_items?.[0]?.product?.name || 'Rental Item'}
+                      </h4>
+                      <p className="text-[11px] text-slate-500 font-medium">
+                        Client: {ord.customer?.name || 'Customer'}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        {/* Legend Box */}
+        <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-xs space-y-3">
+          <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-400">Legend</h4>
+          <div className="space-y-2 text-xs font-semibold text-slate-700">
+            <div className="flex items-center gap-2.5">
+              <span className="w-3 h-3 rounded-full bg-slate-900 inline-block"></span>
+              <span>Scheduled Pickup</span>
             </div>
-          ) : (
-            selectedDayOrders.map((ord) => {
-              const badge = getStatusBadge(ord, selectedDate);
-              return (
-                <div
-                  key={ord.id}
-                  onClick={() => onSelectOrder(ord)}
-                  className="glass-card rounded-xl p-3.5 border border-slate-800 hover:border-cyan-500/50 cursor-pointer"
-                >
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[11px] font-mono text-cyan-400 font-bold">
-                      #{ord.id.slice(0, 8)}
-                    </span>
-                    <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${badge.bg}`}>
-                      {badge.label}
-                    </span>
-                  </div>
-
-                  <h5 className="text-xs font-bold text-slate-200">{ord.customer?.name}</h5>
-                  <p className="text-[11px] text-slate-400 line-clamp-1 mt-0.5">
-                    {ord.order_items?.[0]?.product?.name}
-                  </p>
-
-                  <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-800/80 mt-2">
-                    <span>${ord.total_amount.toFixed(2)}</span>
-                    <span className="text-cyan-400 font-semibold uppercase">{ord.state}</span>
-                  </div>
-                </div>
-              );
-            })
-          )}
+            <div className="flex items-center gap-2.5">
+              <span className="w-3 h-3 rounded-full bg-slate-300 border border-slate-400 inline-block"></span>
+              <span>Due Return</span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <span className="w-3 h-3 rounded-full bg-red-500 inline-block"></span>
+              <span>Overdue / Late</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

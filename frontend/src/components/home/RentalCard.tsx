@@ -77,12 +77,12 @@ export const RentalCard: React.FC<RentalCardProps> = ({
       to={`/products/${id}`}
       className="group block bg-white rounded-3xl p-3.5 border border-neutral-200/60 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
     >
-      {/* Image & Badges Container */}
-      <div className="relative h-48 sm:h-52 rounded-2xl overflow-hidden bg-neutral-100">
+      {/* Image & Badges Container - Square Box */}
+      <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-neutral-100 flex items-center justify-center p-3">
         <img
           src={imageUrl}
           alt={title}
-          className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${
+          className={`w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 ${
             isOutOfStock ? 'opacity-50 grayscale-[30%]' : ''
           }`}
         />
