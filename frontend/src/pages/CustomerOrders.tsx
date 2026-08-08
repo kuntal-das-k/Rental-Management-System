@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/client';
 import { useAuthStore } from '../store/useAuthStore';
 import { Navbar } from '../components/Navbar';
@@ -43,9 +43,12 @@ export const CustomerOrders: React.FC = () => {
     enabled: !!user,
   });
 
+  const queryClient = useQueryClient();
+
   const handleConfirmOrder = async (orderId: string) => {
     try {
       await api.patch(`/orders/${orderId}/confirm`);
+      await queryClient.invalidateQueries();
       refetch();
     } catch (err: any) {
       alert(err.response?.data?.error || 'Failed to confirm order');
@@ -56,6 +59,7 @@ export const CustomerOrders: React.FC = () => {
     if (!confirm('Are you sure you want to cancel this order?')) return;
     try {
       await api.patch(`/orders/${orderId}/cancel`);
+      await queryClient.invalidateQueries();
       refetch();
     } catch (err: any) {
       alert(err.response?.data?.error || 'Failed to cancel order');
@@ -66,6 +70,7 @@ export const CustomerOrders: React.FC = () => {
     try {
       const res = await api.post(`/orders/${orderId}/create-invoice`);
       alert(`Invoice ${res.data.data.invoice_number} generated successfully!`);
+      await queryClient.invalidateQueries();
       refetch();
     } catch (err: any) {
       alert(err.response?.data?.error || 'Failed to generate invoice');

@@ -73,7 +73,8 @@ export class ProductController {
     try {
       const { id } = req.params;
       const { isPublished } = req.body;
-      const product = await productService.togglePublishStatus(id, isPublished);
+      const user = req.user!;
+      const product = await productService.togglePublishStatus(id, isPublished, user.vendorId, user.role);
       return res.status(200).json({ success: true, data: product });
     } catch (err: any) {
       return res.status(400).json({ success: false, error: err.message });

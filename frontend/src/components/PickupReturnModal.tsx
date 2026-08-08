@@ -48,7 +48,7 @@ export const PickupReturnModal: React.FC<PickupReturnModalProps> = ({
         </div>
 
         {/* Order details summary */}
-        <div className="bg-slate-900/90 rounded-xl p-3.5 border border-slate-800 mb-4 text-xs space-y-1">
+        <div className="bg-slate-900/90 rounded-xl p-3.5 border border-slate-800 mb-4 text-xs space-y-2">
           <div className="flex justify-between font-bold text-slate-200">
             <span>Order #{order.id.slice(0, 8)}</span>
             <span className="text-cyan-400">{order.customer?.name}</span>
@@ -57,6 +57,45 @@ export const PickupReturnModal: React.FC<PickupReturnModalProps> = ({
             Rental Period: {new Date(order.scheduled_pickup_at).toLocaleDateString()} to{' '}
             {new Date(order.scheduled_return_at).toLocaleDateString()}
           </p>
+
+          {/* Security Deposit & Penalty Return Calculation Banner */}
+          {type === 'RETURN' && (() => {
+            const scheduledReturn = new Date(order.scheduled_return_at);
+            const now = new Date();
+            const isLate = now > scheduledReturn;
+            const diffDays = isLate ? Math.ceil((now.getTime() - scheduledReturn.getTime()) / (1000 * 60 * 60 * 24)) : 0;
+            const depositAmount = order.order_items?.reduce((sum, item) => sum + (item.product?.security_deposit_amount || 0) * item.quantity, 0) || 150;
+            const dailyLateFee = order.order_items?.[0]?.product?.late_fee_per_unit || 25;
+            const calculatedPenalty = isLate ? diffDays * dailyLateFee : 0;
+            const refundBalance = Math.max(0, depositAmount - calculatedPenalty);
+
+            return isLate ? (
+              <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-extrabold block text-[11px] text-red-400 uppercase">
+                    Overdue Return ({diffDays} Day{diffDays > 1 ? 's' : ''} Late)
+                  </span>
+                  <p className="text-[11px] text-slate-300 mt-0.5">
+                    Late fee penalty of <strong className="text-red-400">${calculatedPenalty}</strong> will be calculated and deducted from the <strong>${depositAmount}</strong> security deposit.
+                    <span className="block text-emerald-400 font-bold mt-0.5">
+                      Net Deposit Refund: ${refundBalance.toFixed(2)}
+                    </span>
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                <div className="text-[11px]">
+                  <span className="font-extrabold text-emerald-400">On-Time Return Verified</span>
+                  <p className="text-slate-300 mt-0.5">
+                    Customer gets the entire <strong className="text-emerald-400">${depositAmount} security deposit refunded in full</strong> without any penalty deductions.
+                  </p>
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Inspection Checklist */}

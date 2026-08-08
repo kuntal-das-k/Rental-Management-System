@@ -231,7 +231,7 @@ export const AdminDashboard: React.FC = () => {
   // Create Rental Submission
   const [isCreatingRental, setIsCreatingRental] = useState(false);
 
-  const handleCreateRentalSubmit = async (e: React.FormEvent) => {
+  const handleCreateRentalSubmit = async (e: React.FormEvent, onTheSpot: boolean = false) => {
     e.preventDefault();
     setCreateRentalError('');
 
@@ -264,6 +264,7 @@ export const AdminDashboard: React.FC = () => {
       await api.post('/orders', {
         customerId: targetCustomer,
         vendorId: targetVendorId,
+        pickupType: 'PICKUP',
         items: [
           {
             productId: targetProduct.id,
@@ -277,6 +278,9 @@ export const AdminDashboard: React.FC = () => {
         ],
         scheduledPickupAt: new Date(pickupDateStr).toISOString(),
         scheduledReturnAt: new Date(returnDateStr).toISOString(),
+        onTheSpot,
+        inStoreRental: onTheSpot,
+        paymentMethod: 'IN_STORE_CASH',
       });
 
       setCreateRentalOpen(false);
@@ -287,7 +291,11 @@ export const AdminDashboard: React.FC = () => {
       setNewRentalReturnDate('');
       refetchOrders();
       refetchMetrics();
-      alert('✅ Rental order created successfully!');
+      alert(
+        onTheSpot
+          ? '⚡ In-Store Spot Rental Confirmed! Payment & Security Deposit collected, PDF invoice generated, and item handed over on the spot.'
+          : '✅ In-Store Quotation created successfully!'
+      );
     } catch (err: any) {
       setCreateRentalError(err.response?.data?.error || 'Failed to create rental order. Check server logs.');
     } finally {
@@ -1693,7 +1701,29 @@ export const AdminDashboard: React.FC = () => {
                 </div>
               </div>
 
-              <div className="pt-2 flex justify-end gap-2">
+              {/* Selected Product Live Pricing & Security Deposit Summary */}
+              {newRentalProductId && (() => {
+                const selectedP = productsData.find((p: any) => p.id === newRentalProductId);
+                if (!selectedP) return null;
+                const depositAmt = selectedP.security_deposit_amount || 150;
+                return (
+                  <div className="p-3 bg-slate-100 rounded-xl border border-slate-200 text-xs space-y-1">
+                    <div className="flex justify-between font-bold text-slate-800">
+                      <span>Daily Rental Rate:</span>
+                      <span className="text-slate-900">${selectedP.sales_price}/day</span>
+                    </div>
+                    <div className="flex justify-between font-bold text-slate-800">
+                      <span>Refundable Security Deposit:</span>
+                      <span className="text-cyan-700">${depositAmt}</span>
+                    </div>
+                    <p className="text-[10px] text-slate-500 mt-1">
+                      💡 On on-time return with pristine condition inspection, the entire <strong>${depositAmt} security deposit</strong> will be refunded to customer.
+                    </p>
+                  </div>
+                );
+              })()}
+
+              <div className="pt-2 flex flex-col sm:flex-row justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setCreateRentalOpen(false)}
@@ -1702,11 +1732,20 @@ export const AdminDashboard: React.FC = () => {
                   Cancel
                 </button>
                 <button
-                  type="submit"
+                  type="button"
                   disabled={isCreatingRental}
-                  className="px-5 py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-bold rounded-lg shadow-sm"
+                  onClick={(e) => handleCreateRentalSubmit(e, false)}
+                  className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-lg"
                 >
-                  {isCreatingRental ? 'Creating Order...' : 'Create Order'}
+                  Save Quotation
+                </button>
+                <button
+                  type="button"
+                  disabled={isCreatingRental}
+                  onClick={(e) => handleCreateRentalSubmit(e, true)}
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-extrabold rounded-lg shadow-sm flex items-center justify-center gap-1.5"
+                >
+                  <span>⚡ Rent On The Spot (Collect Payment + Deposit)</span>
                 </button>
               </div>
             </form>

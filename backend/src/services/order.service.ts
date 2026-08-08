@@ -92,13 +92,15 @@ export class OrderService {
       items: validItems,
     });
 
+    const paymentMethod = data.paymentMethod || data.payment_method || 'CREDIT_CARD';
+
     // Record rental fee payment
     await orderRepo.createPayment({
       order_id: order.id,
       amount: Math.max(0, totalAmount - depositTotal),
       type: 'RENTAL',
       status: 'COMPLETED',
-      method: 'CREDIT_CARD',
+      method: paymentMethod,
       transaction_ref: `MOCK_RENTAL_TXN_${Date.now()}`,
     });
 
@@ -109,9 +111,22 @@ export class OrderService {
         amount: depositTotal,
         type: 'DEPOSIT',
         status: 'HELD',
-        method: 'CREDIT_CARD',
+        method: paymentMethod,
         transaction_ref: `DEP_HELD_${Date.now()}`,
       });
+    }
+
+    // In-Store Spot Rental: Confirm order, generate PDF invoice, and mark picked up on the spot
+    if (data.onTheSpot || data.inStoreRental) {
+      await orderRepo.updateState(order.id, 'SALES_ORDER');
+      await this.createInvoice(order.id);
+      await orderRepo.updateStockOnPickupOrReturn(order.id, false);
+      await orderRepo.addPickupReturnLog({
+        order_id: order.id,
+        type: 'PICKUP',
+        condition_notes: 'In-store rental: Confirmed, payment & security deposit collected, item handed over on the spot.',
+      });
+      return orderRepo.updateState(order.id, 'PICKED_UP');
     }
 
     return order;
@@ -243,19 +258,31 @@ export class OrderService {
       calculatedLateFee = diffDays * dailyLateFeeRate;
     }
 
-    // Check held deposit payments or service deposit items
-    const depositItem = order.order_items.find(
-      (item) => item.product.product_type === 'SERVICE' && item.product.name.toLowerCase().includes('deposit')
-    );
+    // Calculate total security deposit held
+    let depositAmount = 0;
+    const heldPayment = order.payments?.find((p) => p.type === 'DEPOSIT' && (p.status === 'HELD' || p.status === 'COMPLETED'));
+    if (heldPayment) {
+      depositAmount = heldPayment.amount;
+    } else {
+      const depositItem = order.order_items.find(
+        (item) => item.product.product_type === 'SERVICE' && item.product.name.toLowerCase().includes('deposit')
+      );
+      if (depositItem) {
+        depositAmount = depositItem.line_total;
+      } else {
+        for (const item of order.order_items) {
+          if (item.product.security_deposit_amount) {
+            depositAmount += item.product.security_deposit_amount * item.quantity;
+          }
+        }
+      }
+    }
 
-    const heldPayment = order.payments?.find((p) => p.type === 'DEPOSIT' && p.status === 'HELD');
-
-    const depositAmount = heldPayment ? heldPayment.amount : depositItem ? depositItem.line_total : 0;
     const refundAmount = Math.max(0, depositAmount - calculatedLateFee);
 
     if (depositAmount > 0) {
-      if (calculatedLateFee > 0) {
-        // Late return penalty deducted from security deposit
+      if (isLate && calculatedLateFee > 0) {
+        // Late return: penalty calculated & deducted from security deposit
         const penaltyDeduction = Math.min(depositAmount, calculatedLateFee);
         await orderRepo.createPayment({
           order_id: orderId,
@@ -275,7 +302,7 @@ export class OrderService {
           transaction_ref: `REFUND_DEP_BAL_${Date.now()}`,
         });
       } else {
-        // On-time return: Full security deposit refunded without any deduction
+        // On-time return: Entire 100% security deposit returned to customer
         await orderRepo.createPayment({
           order_id: orderId,
           amount: depositAmount,

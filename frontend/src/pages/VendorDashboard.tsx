@@ -90,7 +90,8 @@ export const VendorDashboard: React.FC = () => {
   // Action Handlers
   const handleSendQuotation = async (id: string) => {
     try {
-      await api.patch(`/orders/${id}/send-quotation`);
+      await api.patch(`/orders/${id}/quotation-sent`);
+      await queryClient.invalidateQueries();
       refetchOrders();
     } catch (err: any) {
       alert(err.response?.data?.error || 'Action failed');
@@ -100,6 +101,7 @@ export const VendorDashboard: React.FC = () => {
   const handleConfirmOrder = async (id: string) => {
     try {
       await api.patch(`/orders/${id}/confirm`);
+      await queryClient.invalidateQueries();
       refetchOrders();
     } catch (err: any) {
       alert(err.response?.data?.error || 'Action failed');
@@ -110,6 +112,7 @@ export const VendorDashboard: React.FC = () => {
     try {
       const res = await api.post(`/orders/${id}/create-invoice`);
       alert(`Invoice created: ${res.data.data.invoice_number}`);
+      await queryClient.invalidateQueries();
       refetchOrders();
     } catch (err: any) {
       alert(err.response?.data?.error || 'Action failed');
@@ -121,6 +124,7 @@ export const VendorDashboard: React.FC = () => {
     try {
       await api.patch(`/orders/${pickupModalOrder.id}/pickup`, { conditionNotes: notes });
       setPickupModalOrder(null);
+      await queryClient.invalidateQueries();
       refetchOrders();
     } catch (err: any) {
       alert(err.response?.data?.error || 'Pickup confirmation failed');
@@ -132,6 +136,7 @@ export const VendorDashboard: React.FC = () => {
     try {
       await api.patch(`/orders/${returnModalOrder.id}/return`, { conditionNotes: notes, conditionPass });
       setReturnModalOrder(null);
+      await queryClient.invalidateQueries();
       refetchOrders();
     } catch (err: any) {
       alert(err.response?.data?.error || 'Return confirmation failed');
@@ -141,6 +146,7 @@ export const VendorDashboard: React.FC = () => {
   const handleTogglePublishProduct = async (productId: string, isPublished: boolean) => {
     try {
       await api.patch(`/products/${productId}/publish`, { isPublished: !isPublished });
+      await queryClient.invalidateQueries();
       refetchProducts();
     } catch (err: any) {
       alert(err.response?.data?.error || 'Publish toggle failed');
@@ -370,6 +376,7 @@ export const VendorDashboard: React.FC = () => {
                     </button>
                   </div>
 
+<<<<<<< HEAD
                   <div className="space-y-3">
                     {ordersData.slice(0, 3).map((ord) => (
                       <div key={ord.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
@@ -399,6 +406,20 @@ export const VendorDashboard: React.FC = () => {
                           Share Profile
                         </button>
                       </div>
+=======
+                  <div className="flex items-center gap-2">
+                    {(user?.role === 'VENDOR' || user?.role === 'ADMIN') && (
+                      <button
+                        onClick={() => handleTogglePublishProduct(prod.id, prod.is_published)}
+                        className={`px-2.5 py-1 text-[10px] font-bold rounded border transition-colors ${
+                          prod.is_published
+                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20'
+                            : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
+                        }`}
+                      >
+                        {prod.is_published ? 'Unpublish' : 'Publish'}
+                      </button>
+>>>>>>> b65a2f1a9e0704155623358e08731bb676553e8a
                     )}
                   </div>
                 </div>
