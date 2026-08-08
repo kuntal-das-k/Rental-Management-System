@@ -66,5 +66,5 @@ export interface Order {
   created_at: string;
   order_items: OrderItem[];
   invoices?: { id: string; invoice_number: string; status: string; pdf_url?: string }[];
-  payments?: { id: string; amount: number; type: string; method: string }[];
+  payments?: { id: string; amount: number; type: string; status?: string; method: string; transaction_ref?: string }[];
 }

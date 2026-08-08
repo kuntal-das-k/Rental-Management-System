@@ -258,16 +258,31 @@ export const CustomerOrders: React.FC = () => {
                         </div>
 
                         <div className="bg-slate-900/60 rounded-xl p-3 space-y-1">
-                          <span className="text-[10px] font-bold text-slate-500 uppercase">Payments</span>
+                          <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1">
+                            <Shield className="w-3 h-3" /> Security Deposit Ledger
+                          </span>
                           {order.payments && order.payments.length > 0 ? (
                             order.payments.map((p, i) => (
-                              <p key={i} className="text-[11px] text-slate-300">
-                                <span className="font-bold">{p.type}</span>: ${p.amount.toFixed(2)} via {p.method}
-                              </p>
+                              <div key={i} className="text-[11px] text-slate-300 flex items-center justify-between border-b border-slate-800/50 pb-1">
+                                <span className="font-semibold text-slate-200">
+                                  {p.type === 'DEPOSIT' ? '🛡 Deposit' : p.type === 'LATE_FEE' ? '⚠️ Late Fee Penalty' : '💳 Rental Fee'}
+                                </span>
+                                <div className="text-right">
+                                  <span className={`font-bold ${p.type === 'LATE_FEE' ? 'text-red-400' : 'text-cyan-300'}`}>
+                                    ${p.amount.toFixed(2)}
+                                  </span>
+                                  <span className="block text-[9px] font-extrabold uppercase text-slate-400">
+                                    {p.status || 'COMPLETED'}
+                                  </span>
+                                </div>
+                              </div>
                             ))
                           ) : (
-                            <p className="text-[11px] text-slate-400">No payments recorded</p>
+                            <p className="text-[11px] text-slate-400">No deposit payments logged</p>
                           )}
+                          <p className="text-[9px] text-slate-400 pt-1 leading-tight">
+                            💡 On-time return = 100% deposit refund. Late return = Penalty deducted from deposit balance.
+                          </p>
                         </div>
                       </div>
 
