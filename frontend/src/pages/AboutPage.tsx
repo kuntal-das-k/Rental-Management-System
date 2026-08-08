@@ -25,9 +25,9 @@ export const AboutPage: React.FC = () => {
         {/* Hero Showcase Image */}
         <section className="w-full">
           <div className="rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm border border-slate-200/50 bg-white">
-            <img
-              src="/images/image.png"
-              alt="Twin6Rental Luxury Cinema Camera and Leather Duffel Bag Rental Assets"
+            <video loop autoPlay muted
+              src="/video/seen.mp4"
+
               className="w-full h-auto max-h-[540px] object-cover object-center block"
             />
           </div>
