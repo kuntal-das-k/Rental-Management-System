@@ -1,217 +1,228 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Navbar } from '../components/Navbar';
-import {
-  Shield,
-  Zap,
-  Clock,
-  DollarSign,
-  Truck,
-  FileText,
-  Users,
-  Star,
-  ArrowRight,
-  CheckCircle2,
-  Sparkles,
-} from 'lucide-react';
-
-const features = [
-  {
-    icon: Shield,
-    title: 'Automated Security Deposits',
-    description:
-      'Every rental automatically calculates and collects a refundable security deposit. When the item is returned in good condition, the deposit is auto-settled — minus any late fees.',
-    color: 'text-cyan-400',
-    bg: 'bg-cyan-500/10 border-cyan-500/30',
-  },
-  {
-    icon: Clock,
-    title: 'Odoo Rental Workflow',
-    description:
-      'Our order lifecycle follows Odoo conventions: Quotation → Quotation Sent → Sales Order → Invoice. Vendors manage orders through an intuitive Kanban board.',
-    color: 'text-blue-400',
-    bg: 'bg-blue-500/10 border-blue-500/30',
-  },
-  {
-    icon: DollarSign,
-    title: 'Dynamic Pricing Engine',
-    description:
-      'Vendors set flexible pricing rules via Pricelists — apply percentage discounts, fixed prices, minimum quantity thresholds, and validity windows.',
-    color: 'text-emerald-400',
-    bg: 'bg-emerald-500/10 border-emerald-500/30',
-  },
-  {
-    icon: Truck,
-    title: 'Pickup & Return Tracking',
-    description:
-      'Full pickup/return log with condition notes and timestamps. Choose between home delivery or in-store pickup for maximum flexibility.',
-    color: 'text-amber-400',
-    bg: 'bg-amber-500/10 border-amber-500/30',
-  },
-  {
-    icon: FileText,
-    title: 'Instant PDF Invoices',
-    description:
-      'Generate professional PDF invoices with GST details, rental line items, vendor information, and payment summaries — all automatically.',
-    color: 'text-purple-400',
-    bg: 'bg-purple-500/10 border-purple-500/30',
-  },
-  {
-    icon: Users,
-    title: 'Multi-Vendor Marketplace',
-    description:
-      'Multiple verified vendors list their equipment on one platform. Customers browse across vendors, compare prices, and rent from the best.',
-    color: 'text-rose-400',
-    bg: 'bg-rose-500/10 border-rose-500/30',
-  },
-];
-
-const stats = [
-  { label: 'Verified Vendors', value: '10+', icon: Users },
-  { label: 'Products Listed', value: '200+', icon: Star },
-  { label: 'Orders Processed', value: '1,500+', icon: FileText },
-  { label: 'Uptime SLA', value: '99.9%', icon: Zap },
-];
+import { Link, useLocation } from 'react-router-dom';
 
 export const AboutPage: React.FC = () => {
+  const location = useLocation();
+  const isActive = (path: string) => location.pathname === path;
+
   return (
-    <div className="min-h-screen bg-[#030712] text-slate-100 flex flex-col">
-      <Navbar />
+    <div className="min-h-screen bg-[#FAFAFA] text-slate-900 flex flex-col font-sans selection:bg-slate-900 selection:text-white">
+      {/* Top Header / Navigation */}
+      <header className="w-full bg-[#FAFAFA] border-b border-slate-200/60 sticky top-0 z-50 backdrop-blur-md bg-opacity-90">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          {/* Logo */}
+          <Link to="/" className="text-lg font-bold tracking-tight text-slate-900 hover:opacity-80 transition-opacity">
+            Twin6Rental
+          </Link>
 
-      {/* Hero */}
-      <section className="relative bg-gradient-to-b from-slate-900 via-slate-950 to-[#030712] border-b border-slate-800/80 py-20 px-4 lg:px-8">
-        <div className="max-w-5xl mx-auto text-center space-y-6">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-bold">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>About TwinSix Rentals</span>
-          </div>
-
-          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
-            The Future of{' '}
-            <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-              Multi-Vendor Equipment Rental
-            </span>
-          </h1>
-
-          <p className="text-sm sm:text-base text-slate-400 max-w-2xl mx-auto leading-relaxed">
-            TwinSix Rentals is a full-stack rental marketplace platform built with modern technologies.
-            Vendors list products, customers browse and book, and the platform automates security deposits,
-            late-fee detection, and digital invoicing — all following the Odoo Rental module workflow.
-          </p>
-        </div>
-      </section>
-
-      {/* Stats */}
-      <section className="max-w-5xl mx-auto px-4 lg:px-8 -mt-8 relative z-10">
-        <div className="glass-panel rounded-2xl border border-slate-800 p-6 grid grid-cols-2 sm:grid-cols-4 gap-6">
-          {stats.map((stat, i) => {
-            const StatIcon = stat.icon;
-            return (
-              <div key={i} className="text-center space-y-1">
-                <StatIcon className="w-5 h-5 mx-auto text-cyan-400" />
-                <span className="text-2xl font-black text-white block">{stat.value}</span>
-                <span className="text-[11px] font-semibold text-slate-400">{stat.label}</span>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Features Grid */}
-      <section className="max-w-6xl mx-auto px-4 lg:px-8 py-16 space-y-10">
-        <div className="text-center space-y-3">
-          <h2 className="text-2xl font-extrabold text-white">Platform Features</h2>
-          <p className="text-sm text-slate-400 max-w-xl mx-auto">
-            Everything you need to run a professional rental marketplace — built in, not bolted on.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((feature, i) => {
-            const FeatureIcon = feature.icon;
-            return (
-              <div
-                key={i}
-                className="glass-card rounded-2xl p-6 border border-slate-800 space-y-4 group"
-              >
-                <div className={`w-12 h-12 rounded-xl ${feature.bg} border flex items-center justify-center`}>
-                  <FeatureIcon className={`w-6 h-6 ${feature.color}`} />
-                </div>
-                <h3 className="text-sm font-bold text-slate-100 group-hover:text-cyan-400 transition-colors">
-                  {feature.title}
-                </h3>
-                <p className="text-xs text-slate-400 leading-relaxed">{feature.description}</p>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Tech Stack */}
-      <section className="max-w-5xl mx-auto px-4 lg:px-8 pb-16">
-        <div className="glass-panel rounded-2xl border border-slate-800 p-8 space-y-6">
-          <h2 className="text-xl font-extrabold text-white text-center">Technology Stack</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-            {[
-              { name: 'React + TypeScript', desc: 'Frontend SPA' },
-              { name: 'Tailwind CSS', desc: 'UI Styling' },
-              { name: 'Node.js + Express', desc: 'REST API Backend' },
-              { name: 'Prisma ORM', desc: 'Database Layer' },
-              { name: 'React Query', desc: 'Server State' },
-              { name: 'Zustand', desc: 'Client State' },
-              { name: 'BullMQ + Redis', desc: 'Background Jobs' },
-              { name: 'PDFKit', desc: 'Invoice Generation' },
-            ].map((tech, i) => (
-              <div key={i} className="bg-slate-900/60 rounded-xl p-3 space-y-1">
-                <span className="text-xs font-bold text-cyan-400">{tech.name}</span>
-                <span className="text-[10px] text-slate-400 block">{tech.desc}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="max-w-5xl mx-auto px-4 lg:px-8 pb-16">
-        <div className="bg-gradient-to-r from-cyan-500/10 to-blue-600/10 rounded-2xl border border-cyan-500/20 p-8 text-center space-y-4">
-          <h2 className="text-xl font-extrabold text-white">Ready to Start Renting?</h2>
-          <p className="text-sm text-slate-400 max-w-md mx-auto">
-            Browse our multi-vendor marketplace, find premium equipment, and book with zero friction.
-          </p>
-          <div className="flex items-center justify-center gap-4">
+          {/* Navigation Links */}
+          <nav className="hidden md:flex items-center space-x-8 text-xs font-medium text-slate-600">
             <Link
               to="/"
-              className="px-6 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-sm shadow-lg shadow-cyan-500/25 flex items-center gap-2 transition-all"
+              className={`transition-colors hover:text-slate-900 py-1 ${
+                isActive('/') ? 'text-slate-900 font-semibold border-b-2 border-slate-900' : ''
+              }`}
             >
-              Browse Rentals <ArrowRight className="w-4 h-4" />
+              Home
             </Link>
             <Link
-              to="/signup/vendor"
-              className="px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm border border-slate-700 transition-all"
+              to="/rentals"
+              className={`transition-colors hover:text-slate-900 py-1 ${
+                isActive('/rentals') ? 'text-slate-900 font-semibold border-b-2 border-slate-900' : ''
+              }`}
             >
-              Become a Vendor
+              Rentals
+            </Link>
+            <Link
+              to="/how-it-works"
+              className={`transition-colors hover:text-slate-900 py-1 ${
+                isActive('/how-it-works') ? 'text-slate-900 font-semibold border-b-2 border-slate-900' : ''
+              }`}
+            >
+              How It Works
+            </Link>
+            <Link
+              to="/about"
+              className={`transition-colors hover:text-slate-900 py-1 relative ${
+                isActive('/about') ? 'text-slate-900 font-semibold border-b-2 border-slate-900' : ''
+              }`}
+            >
+              About Us
+            </Link>
+            <Link
+              to="/contact"
+              className={`transition-colors hover:text-slate-900 py-1 ${
+                isActive('/contact') ? 'text-slate-900 font-semibold border-b-2 border-slate-900' : ''
+              }`}
+            >
+              Contact
+            </Link>
+          </nav>
+
+          {/* User Actions */}
+          <div className="flex items-center space-x-4">
+            <Link
+              to="/login"
+              className="text-xs font-medium text-slate-700 hover:text-slate-900 transition-colors"
+            >
+              Login
+            </Link>
+            <Link
+              to="/signup/customer"
+              className="text-xs font-medium bg-slate-950 text-white px-4 py-2 rounded-full hover:bg-slate-800 transition-all shadow-sm"
+            >
+              Get Started
             </Link>
           </div>
         </div>
-      </section>
+      </header>
+
+      {/* Main Content Area */}
+      <main className="flex-1 max-w-6xl w-full mx-auto px-6 pt-16 pb-20 space-y-14 sm:space-y-16">
+        {/* Hero Section */}
+        <section className="text-center max-w-3xl mx-auto space-y-4">
+          <h1 className="text-3xl sm:text-5xl font-semibold tracking-tight text-slate-900">
+            Access over Ownership.
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 max-w-xl mx-auto leading-relaxed font-normal">
+            We believe the finest things in life should be experienced, not hoarded. Twin6Rental is the leading marketplace for premium product rentals, curating a collection of high-end lifestyle assets for the modern, sustainable consumer.
+          </p>
+        </section>
+
+        {/* Hero Showcase Image */}
+        <section className="w-full">
+          <div className="rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm border border-slate-200/50 bg-white">
+            <img
+              src="/images/about-hero.png"
+              alt="Twin6Rental Luxury Cinema Camera and Leather Duffel Bag Rental Assets"
+              className="w-full h-auto max-h-[540px] object-cover object-center block"
+            />
+          </div>
+        </section>
+
+        {/* Feature Cards Section */}
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 pt-4">
+          {/* Card 1: Sustainable Luxury */}
+          <div className="bg-[#F4F4F6] rounded-2xl sm:rounded-3xl p-8 sm:p-10 flex flex-col justify-between space-y-6">
+            <div className="w-8 h-8 flex items-center justify-center text-slate-900">
+              {/* Recycle / Circular economy icon matching reference image */}
+              <svg
+                className="w-7 h-7"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M7 19H4.815a1.83 1.83 0 0 1-1.57-.91 1.78 1.78 0 0 1 .15-1.89L7 11.5" />
+                <path d="M11 19h8.185a1.83 1.83 0 0 0 1.57-.91 1.78 1.78 0 0 0-.15-1.89L17 11.5" />
+                <path d="M12 4.5l3.5 6H8.5L12 4.5z" />
+                <path d="M12 2v2.5" />
+                <path d="m14 17 2 2-2 2" />
+                <path d="m10 7-2-2 2-2" />
+              </svg>
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-xl font-semibold text-slate-900 tracking-tight">
+                Sustainable Luxury
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 leading-relaxed font-normal">
+                By facilitating a circular economy for premium goods, we reduce waste without compromising on quality. Enjoy the latest technology, fashion, and gear while minimizing your environmental footprint.
+              </p>
+            </div>
+          </div>
+
+          {/* Card 2: Curated Excellence */}
+          <div className="bg-[#F4F4F6] rounded-2xl sm:rounded-3xl p-8 sm:p-10 flex flex-col justify-between space-y-6">
+            <div className="w-8 h-8 flex items-center justify-center text-slate-900">
+              {/* Scalloped badge checkmark icon matching reference image */}
+              <svg
+                className="w-7 h-7"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76z" />
+                <path d="m9 12 2 2 4-4" />
+              </svg>
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-xl font-semibold text-slate-900 tracking-tight">
+                Curated Excellence
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 leading-relaxed font-normal">
+                Every item on our platform is meticulously inspected and authenticated. From professional-grade photography equipment to haute couture, we guarantee a flawless experience with every rental.
+              </p>
+            </div>
+          </div>
+        </section>
+      </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-800 py-8 px-4 lg:px-8">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-white text-[10px]">
-              T6
-            </div>
-            <span className="font-bold text-slate-400">TwinSix Rentals</span>
+      <footer className="w-full bg-[#EFEFEF] border-t border-slate-200/80 mt-auto py-12 px-6">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+          {/* Left Footer Column */}
+          <div className="space-y-2 max-w-sm">
+            <h3 className="text-sm font-bold text-slate-900 tracking-tight">
+              Twin6Rental
+            </h3>
+            <p className="text-[11px] text-slate-500 leading-relaxed">
+              © 2024 Twin6Rental. Leading marketplace for premium product rentals.
+            </p>
           </div>
-          <span>© 2026 TwinSix Rentals. Built with ❤️ for premium equipment rental.</span>
-          <div className="flex items-center gap-4">
-            <Link to="/" className="hover:text-cyan-400 transition-colors">Storefront</Link>
-            <Link to="/login" className="hover:text-cyan-400 transition-colors">Log In</Link>
-            <Link to="/signup/customer" className="hover:text-cyan-400 transition-colors">Sign Up</Link>
+
+          {/* Right Footer Link Columns */}
+          <div className="flex items-start space-x-16 sm:space-x-24">
+            {/* Legal Column */}
+            <div className="space-y-2">
+              <span className="text-[11px] font-semibold text-slate-900 block">
+                Legal
+              </span>
+              <ul className="space-y-1 text-[11px] text-slate-500">
+                <li>
+                  <Link to="#" className="hover:text-slate-900 transition-colors">
+                    Terms of Service
+                  </Link>
+                </li>
+                <li>
+                  <Link to="#" className="hover:text-slate-900 transition-colors">
+                    Privacy Policy
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Support Column */}
+            <div className="space-y-2">
+              <span className="text-[11px] font-semibold text-slate-900 block">
+                Support
+              </span>
+              <ul className="space-y-1 text-[11px] text-slate-500">
+                <li>
+                  <Link to="#" className="hover:text-slate-900 transition-colors">
+                    Help Center
+                  </Link>
+                </li>
+                <li>
+                  <Link to="#" className="hover:text-slate-900 transition-colors">
+                    Support
+                  </Link>
+                </li>
+                <li>
+                  <Link to="#" className="hover:text-slate-900 transition-colors">
+                    Newsletter Signup
+                  </Link>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </footer>
     </div>
   );
 };
+
