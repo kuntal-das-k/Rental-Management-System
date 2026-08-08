@@ -155,22 +155,23 @@ export const VendorDashboard: React.FC = () => {
           </button>
         </div>
 
-        {/* Executive Metrics Bar (8 Widgets) */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+        {/* Executive Rental Operations Metrics Bar (All 8 Insights) */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
           {[
             { label: 'Active Rentals', val: metrics?.activeRentals || 0, icon: Truck, color: 'text-cyan-400' },
             { label: 'Rentals Due Today', val: metrics?.rentalsDueToday || 0, icon: CheckCircle2, color: 'text-amber-400' },
             { label: 'Upcoming Pickups', val: metrics?.upcomingPickups || 0, icon: CalendarIcon, color: 'text-blue-400' },
+            { label: 'Upcoming Returns', val: metrics?.upcomingReturns || 0, icon: RotateCcw, color: 'text-purple-400' },
             { label: 'Overdue Rentals', val: metrics?.overdueRentals || 0, icon: AlertTriangle, color: 'text-red-400' },
-            { label: 'Total Revenue', val: `$${(metrics?.totalRevenue || 0).toFixed(0)}`, icon: DollarSign, color: 'text-emerald-400' },
-            { label: 'Deposits Held', val: `$${(metrics?.securityDepositsHeld || 0).toFixed(0)}`, icon: ShieldCheck, color: 'text-cyan-400' },
-            { label: 'Late Fee Collection', val: `$${(metrics?.lateFeeCollection || 0).toFixed(0)}`, icon: RotateCcw, color: 'text-amber-400' },
+            { label: 'Revenue from Rentals', val: `$${(metrics?.totalRevenue || 0).toFixed(0)}`, icon: DollarSign, color: 'text-emerald-400' },
+            { label: 'Security Deposits Held', val: `$${(metrics?.securityDepositsHeld || 0).toFixed(0)}`, icon: ShieldCheck, color: 'text-cyan-400' },
+            { label: 'Late Fee Collection', val: `$${(metrics?.lateFeeCollection || 0).toFixed(0)}`, icon: DollarSign, color: 'text-amber-400' },
           ].map((widget, i) => {
             const WidgetIcon = widget.icon;
             return (
               <div key={i} className="glass-panel p-3.5 rounded-2xl border border-slate-800 space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{widget.label}</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-tight">{widget.label}</span>
                   <WidgetIcon className={`w-4 h-4 ${widget.color}`} />
                 </div>
                 <span className={`text-lg font-black block ${widget.color}`}>{widget.val}</span>

@@ -52,9 +52,17 @@ export class DashboardService {
     const whereBase: any = {};
     if (vendorId) whereBase.vendor_id = vendorId;
 
+    const now = new Date();
     const { dueToday, overdue } = await this.getDueAndOverdueOrders(vendorId);
 
-    const [totalRevenueResult, activeRentalsCount, pendingPickupsCount, totalDepositsResult, totalLateFeesResult] = await Promise.all([
+    const [
+      totalRevenueResult,
+      activeRentalsCount,
+      upcomingPickupsCount,
+      upcomingReturnsCount,
+      totalDepositsResult,
+      totalLateFeesResult,
+    ] = await Promise.all([
       prisma.order.aggregate({
         where: { ...whereBase, state: { in: ['SALES_ORDER', 'PICKED_UP', 'RETURNED'] } },
         _sum: { total_amount: true },
@@ -66,6 +74,10 @@ export class DashboardService {
 
       prisma.order.count({
         where: { ...whereBase, state: 'SALES_ORDER' },
+      }),
+
+      prisma.order.count({
+        where: { ...whereBase, state: 'PICKED_UP', scheduled_return_at: { gte: now } },
       }),
 
       prisma.payment.aggregate({
@@ -82,7 +94,8 @@ export class DashboardService {
     return {
       activeRentals: activeRentalsCount,
       rentalsDueToday: dueToday.length,
-      upcomingPickups: pendingPickupsCount,
+      upcomingPickups: upcomingPickupsCount,
+      upcomingReturns: upcomingReturnsCount,
       overdueRentals: overdue.length,
       totalRevenue: totalRevenueResult._sum.total_amount || 0,
       securityDepositsHeld: totalDepositsResult._sum.amount || 0,
