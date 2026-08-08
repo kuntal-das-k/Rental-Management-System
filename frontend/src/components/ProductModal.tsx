@@ -20,6 +20,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, on
     product_type: product?.product_type || 'GOODS',
     late_fee_per_unit: product?.late_fee_per_unit || 20,
     security_deposit_amount: product?.security_deposit_amount || 150,
+    is_published: product?.is_published !== undefined ? product.is_published : true,
     image_url: product?.image_urls?.[0] || 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=600&q=80',
   });
 
@@ -36,6 +37,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, on
         stock_qty: Number(formData.stock_qty),
         late_fee_per_unit: Number(formData.late_fee_per_unit),
         security_deposit_amount: Number(formData.security_deposit_amount),
+        is_published: Boolean(formData.is_published),
         image_urls: [formData.image_url],
       };
 
@@ -156,6 +158,19 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, on
               onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
               className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-cyan-500"
             />
+          </div>
+
+          <div className="flex items-center gap-2 pt-2">
+            <input
+              type="checkbox"
+              id="is_published_checkbox"
+              checked={formData.is_published}
+              onChange={(e) => setFormData({ ...formData, is_published: e.target.checked })}
+              className="w-4 h-4 rounded accent-cyan-500 cursor-pointer"
+            />
+            <label htmlFor="is_published_checkbox" className="font-bold text-cyan-400 cursor-pointer text-xs">
+              Publish immediately to Customer Storefront
+            </label>
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
