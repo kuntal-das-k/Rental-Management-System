@@ -172,6 +172,10 @@ async function main() {
   // 4. Categories
   const catCamera = await prisma.category.create({ data: { name: 'Cameras & Audio', description: 'DSLRs, Cinema gear, microphones' } });
   const catEV = await prisma.category.create({ data: { name: 'E-Bikes & Scooters', description: 'Urban electric transport' } });
+  await prisma.category.create({ data: { name: 'Drones & Aerial Gear', description: '4K Drones, Gimbals, Aerial Rigs' } });
+  await prisma.category.create({ data: { name: 'Audio & Sound Systems', description: 'PA Speakers, Microphones, DJ Mixers' } });
+  await prisma.category.create({ data: { name: 'Tools & Construction Equipment', description: 'Power tools, Generators, Ladders' } });
+  await prisma.category.create({ data: { name: 'Event & Party Supplies', description: 'Tents, Lighting, Staging, Furniture' } });
   const catService = await prisma.category.create({ data: { name: 'Security & Ancillary Services', description: 'Deposits, Warranties, Insurance' } });
 
   // 5. Global Attributes & Values
