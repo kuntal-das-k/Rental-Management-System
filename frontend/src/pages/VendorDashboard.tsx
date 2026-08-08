@@ -155,30 +155,66 @@ export const VendorDashboard: React.FC = () => {
           </button>
         </div>
 
-        {/* Executive Rental Operations Metrics Bar (All 8 Insights) */}
+        {/* Executive Rental Operations Metrics Bar (All 8 Insights - Interactive) */}
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
           {[
-            { label: 'Active Rentals', val: metrics?.activeRentals || 0, icon: Truck, color: 'text-cyan-400' },
-            { label: 'Rentals Due Today', val: metrics?.rentalsDueToday || 0, icon: CheckCircle2, color: 'text-amber-400' },
-            { label: 'Upcoming Pickups', val: metrics?.upcomingPickups || 0, icon: CalendarIcon, color: 'text-blue-400' },
-            { label: 'Upcoming Returns', val: metrics?.upcomingReturns || 0, icon: RotateCcw, color: 'text-purple-400' },
-            { label: 'Overdue Rentals', val: metrics?.overdueRentals || 0, icon: AlertTriangle, color: 'text-red-400' },
-            { label: 'Revenue from Rentals', val: `$${(metrics?.totalRevenue || 0).toFixed(0)}`, icon: DollarSign, color: 'text-emerald-400' },
-            { label: 'Security Deposits Held', val: `$${(metrics?.securityDepositsHeld || 0).toFixed(0)}`, icon: ShieldCheck, color: 'text-cyan-400' },
-            { label: 'Late Fee Collection', val: `$${(metrics?.lateFeeCollection || 0).toFixed(0)}`, icon: DollarSign, color: 'text-amber-400' },
+            { id: 'active', label: 'Active Rentals', val: metrics?.activeRentals || 0, icon: Truck, color: 'text-cyan-400', filterState: 'active' },
+            { id: 'dueToday', label: 'Rentals Due Today', val: metrics?.rentalsDueToday || 0, icon: CheckCircle2, color: 'text-amber-400', filterState: 'dueToday' },
+            { id: 'upcomingPickups', label: 'Upcoming Pickups', val: metrics?.upcomingPickups || 0, icon: CalendarIcon, color: 'text-blue-400', filterState: 'SALES_ORDER' },
+            { id: 'upcomingReturns', label: 'Upcoming Returns', val: metrics?.upcomingReturns || 0, icon: RotateCcw, color: 'text-purple-400', filterState: 'PICKED_UP' },
+            { id: 'overdue', label: 'Overdue Rentals', val: metrics?.overdueRentals || 0, icon: AlertTriangle, color: 'text-red-400', filterState: 'overdue' },
+            { id: 'revenue', label: 'Revenue from Rentals', val: `$${(metrics?.totalRevenue || 0).toFixed(0)}`, icon: DollarSign, color: 'text-emerald-400', filterState: 'analytics' },
+            { id: 'deposits', label: 'Security Deposits Held', val: `$${(metrics?.securityDepositsHeld || 0).toFixed(0)}`, icon: ShieldCheck, color: 'text-cyan-400', filterState: 'analytics' },
+            { id: 'lateFees', label: 'Late Fee Collection', val: `$${(metrics?.lateFeeCollection || 0).toFixed(0)}`, icon: DollarSign, color: 'text-amber-400', filterState: 'analytics' },
           ].map((widget, i) => {
             const WidgetIcon = widget.icon;
             return (
-              <div key={i} className="glass-panel p-3.5 rounded-2xl border border-slate-800 space-y-1">
+              <button
+                key={i}
+                onClick={() => {
+                  if (['analytics'].includes(widget.filterState)) {
+                    setActiveTab('analytics');
+                  } else {
+                    setActiveTab('list');
+                  }
+                }}
+                className="glass-panel p-3.5 rounded-2xl border border-slate-800 space-y-1 text-left hover:border-cyan-500/40 hover:scale-[1.02] transition-all group cursor-pointer"
+              >
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-tight">{widget.label}</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-tight group-hover:text-slate-200 transition-colors">
+                    {widget.label}
+                  </span>
                   <WidgetIcon className={`w-4 h-4 ${widget.color}`} />
                 </div>
                 <span className={`text-lg font-black block ${widget.color}`}>{widget.val}</span>
-              </div>
+              </button>
             );
           })}
         </div>
+
+        {/* Priority Action Alerts Banner */}
+        {((metrics?.overdueRentals || 0) > 0 || (metrics?.rentalsDueToday || 0) > 0) && (
+          <div className="glass-panel rounded-2xl p-4 border border-amber-500/30 bg-amber-500/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-xs font-extrabold text-amber-300 uppercase tracking-wider">Priority Manager Action Required</h3>
+                <p className="text-xs text-slate-300 mt-0.5">
+                  {(metrics?.overdueRentals || 0) > 0 && <span className="text-red-400 font-bold mr-2">🚨 {metrics.overdueRentals} Overdue Rental(s)</span>}
+                  {(metrics?.rentalsDueToday || 0) > 0 && <span className="text-amber-300 font-bold">📅 {metrics.rentalsDueToday} Due Today</span>}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setActiveTab('kanban')}
+              className="px-4 py-2 rounded-xl bg-amber-500 text-slate-950 text-xs font-black hover:bg-amber-400 transition-all shadow-md shrink-0"
+            >
+              Take Action on Kanban Board →
+            </button>
+          </div>
+        )}
 
         {/* View Mode Navigation Tabs */}
         <div className="flex items-center gap-2 border-b border-slate-800 pb-2 overflow-x-auto">
