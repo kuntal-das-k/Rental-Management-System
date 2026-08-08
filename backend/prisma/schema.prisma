@@ -1,0 +1,334 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                String         @id @default(uuid())
+  first_name        String
+  last_name         String
+  name              String
+  email             String         @unique
+  password_hash     String
+  role              String         @default("CUSTOMER")
+  profile_image_url String?
+  is_active         Boolean        @default(true)
+  created_at        DateTime       @default(now())
+  updated_at        DateTime       @updatedAt
+
+  vendor_profile    Vendor?
+  addresses         Address[]
+  orders            Order[]        @relation("CustomerOrders")
+  wishlists         Wishlist[]
+  notifications     Notification[]
+
+  @@map("users")
+}
+
+model Vendor {
+  id               String   @id @default(uuid())
+  user_id          String   @unique
+  user             User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  company_name     String
+  gst_no           String
+  product_category String
+  logo_url         String?
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  products            Product[]
+  pricelists          Pricelist[]
+  vendor_orders       Order[]              @relation("VendorOrders")
+  quotation_templates QuotationTemplate[]
+
+  @@map("vendors")
+}
+
+model Address {
+  id         String   @id @default(uuid())
+  user_id    String
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  line1      String
+  line2      String?
+  city       String
+  state      String
+  pincode    String
+  is_default Boolean  @default(false)
+  created_at DateTime @default(now())
+
+  @@map("addresses")
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String?
+  products    Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id                      String   @id @default(uuid())
+  vendor_id               String
+  vendor                  Vendor   @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+  category_id             String?
+  category                Category? @relation(fields: [category_id], references: [id])
+  name                    String
+  description             String
+  product_type            String   @default("GOODS")
+  sku                     String?  @unique
+  stock_qty               Int      @default(1)
+  sales_price             Float
+  cost_price              Float    @default(0)
+  is_published            Boolean  @default(false)
+  pickup_time             String?
+  return_time             String?
+  late_fee_per_unit       Float?
+  security_deposit_amount Float?
+  image_urls              String   @default("[]")
+  created_at              DateTime @default(now())
+  updated_at              DateTime @updatedAt
+
+  attribute_values ProductAttributeValue[]
+  pricelist_rules  PricelistRule[]
+  order_items      OrderItem[]
+  late_fee_rules   LateFeeRule[]
+  wishlists        Wishlist[]
+
+  @@map("products")
+}
+
+model Attribute {
+  id           String           @id @default(uuid())
+  name         String           @unique
+  display_type String           @default("SELECT")
+  values       AttributeValue[]
+
+  @@map("attributes")
+}
+
+model AttributeValue {
+  id           String    @id @default(uuid())
+  attribute_id String
+  attribute    Attribute @relation(fields: [attribute_id], references: [id], onDelete: Cascade)
+  value        String
+
+  products ProductAttributeValue[]
+
+  @@map("attribute_values")
+}
+
+model ProductAttributeValue {
+  product_id         String
+  product            Product        @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  attribute_value_id String
+  attribute_value    AttributeValue @relation(fields: [attribute_value_id], references: [id], onDelete: Cascade)
+
+  @@id([product_id, attribute_value_id])
+  @@map("product_attribute_values")
+}
+
+model RentalPeriod {
+  id           String      @id @default(uuid())
+  name         String
+  unit         String      @default("DAILY")
+  min_duration Int         @default(1)
+  max_duration Int         @default(365)
+  order_items  OrderItem[]
+
+  @@map("rental_periods")
+}
+
+model Pricelist {
+  id         String          @id @default(uuid())
+  vendor_id  String
+  vendor     Vendor          @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+  name       String
+  is_default Boolean         @default(false)
+  rules      PricelistRule[]
+  orders     Order[]
+
+  @@map("pricelists")
+}
+
+model PricelistRule {
+  id           String    @id @default(uuid())
+  pricelist_id String
+  pricelist    Pricelist @relation(fields: [pricelist_id], references: [id], onDelete: Cascade)
+  product_id   String?
+  product      Product?  @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  price_type   String    @default("DISCOUNT")
+  value        Float
+  min_qty      Int       @default(1)
+  valid_from   DateTime?
+  valid_to     DateTime?
+  selectable   Boolean   @default(true)
+
+  @@map("pricelist_rules")
+}
+
+model Coupon {
+  id             String   @id @default(uuid())
+  code           String   @unique
+  discount_type  String   @default("PERCENT")
+  discount_value Float
+  valid_from     DateTime
+  valid_to       DateTime
+  usage_limit    Int      @default(100)
+  times_used     Int      @default(0)
+  created_at     DateTime @default(now())
+
+  @@map("coupons")
+}
+
+model QuotationTemplate {
+  id                String      @id @default(uuid())
+  vendor_id         String
+  vendor            Vendor      @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+  name              String
+  terms_text        String
+  validity_days     Int         @default(30)
+  payment_terms_pct Float       @default(100)
+  quotations        Quotation[]
+
+  @@map("quotation_templates")
+}
+
+model Quotation {
+  id           String             @id @default(uuid())
+  customer_id  String
+  vendor_id    String
+  template_id  String?
+  template     QuotationTemplate? @relation(fields: [template_id], references: [id])
+  total_amount Float              @default(0)
+  expires_at   DateTime?
+  created_at   DateTime           @default(now())
+  orders       Order[]
+
+  @@map("quotations")
+}
+
+model Order {
+  id                  String       @id @default(uuid())
+  customer_id         String
+  customer            User         @relation("CustomerOrders", fields: [customer_id], references: [id])
+  vendor_id           String
+  vendor              Vendor       @relation("VendorOrders", fields: [vendor_id], references: [id])
+  quotation_id        String?
+  quotation           Quotation?   @relation(fields: [quotation_id], references: [id])
+  pricelist_id        String?
+  pricelist           Pricelist?   @relation(fields: [pricelist_id], references: [id])
+  state               String       @default("QUOTATION")
+  pickup_type         String       @default("DELIVERY")
+  scheduled_pickup_at DateTime
+  scheduled_return_at DateTime
+  actual_return_at    DateTime?
+  total_amount        Float        @default(0)
+  is_late             Boolean      @default(false)
+  created_at          DateTime     @default(now())
+  updated_at          DateTime     @updatedAt
+
+  order_items        OrderItem[]
+  invoices           Invoice[]
+  payments           Payment[]
+  pickup_return_logs PickupReturnLog[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id               String        @id @default(uuid())
+  order_id         String
+  order            Order         @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  product_id       String
+  product          Product       @relation(fields: [product_id], references: [id])
+  quantity         Int           @default(1)
+  rental_period_id String?
+  rental_period    RentalPeriod? @relation(fields: [rental_period_id], references: [id])
+  unit_price       Float
+  tax              Float         @default(0)
+  line_total       Float
+
+  @@map("order_items")
+}
+
+model Invoice {
+  id             String   @id @default(uuid())
+  order_id       String
+  order          Order    @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  invoice_number String   @unique
+  status         String   @default("DRAFT")
+  pdf_url        String?
+  issued_at      DateTime @default(now())
+
+  @@map("invoices")
+}
+
+model Payment {
+  id              String   @id @default(uuid())
+  order_id        String
+  order           Order    @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  amount          Float
+  type            String   @default("RENTAL")
+  status          String   @default("COMPLETED")
+  method          String   @default("CREDIT_CARD")
+  transaction_ref String
+  created_at      DateTime @default(now())
+
+  @@map("payments")
+}
+
+model LateFeeRule {
+  id           String   @id @default(uuid())
+  product_id   String?
+  product      Product? @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  basis        String   @default("DAILY")
+  rate         Float
+  grace_period Int      @default(0)
+  max_cap      Float?
+  created_at   DateTime @default(now())
+
+  @@map("late_fee_rules")
+}
+
+model PickupReturnLog {
+  id              String   @id @default(uuid())
+  order_id        String
+  order           Order    @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  type            String
+  condition_notes String?
+  photo_urls      String   @default("[]")
+  timestamp       DateTime @default(now())
+
+  @@map("pickup_return_logs")
+}
+
+model Notification {
+  id         String   @id @default(uuid())
+  user_id    String
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  type       String
+  channel    String   @default("IN_APP")
+  payload    String   @default("{}")
+  status     String   @default("UNREAD")
+  sent_at    DateTime @default(now())
+
+  @@map("notifications")
+}
+
+model Wishlist {
+  id          String   @id @default(uuid())
+  customer_id String
+  customer    User     @relation(fields: [customer_id], references: [id], onDelete: Cascade)
+  product_id  String
+  product     Product  @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  created_at  DateTime @default(now())
+
+  @@unique([customer_id, product_id])
+  @@map("wishlists")
+}

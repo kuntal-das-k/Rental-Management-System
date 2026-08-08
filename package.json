@@ -1,0 +1,14 @@
+{
+  "name": "twinsix-rentals-root",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Root workspace runner for TwinSix Rentals",
+  "scripts": {
+    "dev": "npm --prefix backend run dev",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "seed": "npm --prefix backend run prisma:seed",
+    "build:frontend": "npm --prefix frontend run build",
+    "build:backend": "npm --prefix backend run build"
+  }
+}
