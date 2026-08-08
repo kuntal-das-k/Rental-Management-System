@@ -243,19 +243,31 @@ export class OrderService {
       calculatedLateFee = diffDays * dailyLateFeeRate;
     }
 
-    // Check held deposit payments or service deposit items
-    const depositItem = order.order_items.find(
-      (item) => item.product.product_type === 'SERVICE' && item.product.name.toLowerCase().includes('deposit')
-    );
+    // Calculate total security deposit held
+    let depositAmount = 0;
+    const heldPayment = order.payments?.find((p) => p.type === 'DEPOSIT' && (p.status === 'HELD' || p.status === 'COMPLETED'));
+    if (heldPayment) {
+      depositAmount = heldPayment.amount;
+    } else {
+      const depositItem = order.order_items.find(
+        (item) => item.product.product_type === 'SERVICE' && item.product.name.toLowerCase().includes('deposit')
+      );
+      if (depositItem) {
+        depositAmount = depositItem.line_total;
+      } else {
+        for (const item of order.order_items) {
+          if (item.product.security_deposit_amount) {
+            depositAmount += item.product.security_deposit_amount * item.quantity;
+          }
+        }
+      }
+    }
 
-    const heldPayment = order.payments?.find((p) => p.type === 'DEPOSIT' && p.status === 'HELD');
-
-    const depositAmount = heldPayment ? heldPayment.amount : depositItem ? depositItem.line_total : 0;
     const refundAmount = Math.max(0, depositAmount - calculatedLateFee);
 
     if (depositAmount > 0) {
-      if (calculatedLateFee > 0) {
-        // Late return penalty deducted from security deposit
+      if (isLate && calculatedLateFee > 0) {
+        // Late return: penalty calculated & deducted from security deposit
         const penaltyDeduction = Math.min(depositAmount, calculatedLateFee);
         await orderRepo.createPayment({
           order_id: orderId,
@@ -275,7 +287,7 @@ export class OrderService {
           transaction_ref: `REFUND_DEP_BAL_${Date.now()}`,
         });
       } else {
-        // On-time return: Full security deposit refunded without any deduction
+        // On-time return: Entire 100% security deposit returned to customer
         await orderRepo.createPayment({
           order_id: orderId,
           amount: depositAmount,
