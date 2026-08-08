@@ -17,7 +17,7 @@ export interface Product {
   vendor_id: string;
   vendor?: { company_name: string; logo_url?: string };
   category_id?: string;
-  category?: { name: string };
+  category?: { id?: string; name: string; description?: string };
   name: string;
   description: string;
   product_type: ProductType;

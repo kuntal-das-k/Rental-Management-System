@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Product } from '../types';
 import { X, Plus, Package } from 'lucide-react';
 import { api } from '../api/client';
