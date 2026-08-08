@@ -20,7 +20,7 @@ export const NavbarHeader: React.FC = () => {
     { name: 'Rentals', path: '/rentals' },
     { name: 'How It Works', path: '/how-it-works' },
     { name: 'About Us', path: '/about' },
-    { name: 'Contact', path: '/about' },
+    { name: 'Contact', path: '/contact' },
   ];
 
   return (

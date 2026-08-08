@@ -26,7 +26,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, on
   const [formData, setFormData] = useState({
     name: product?.name || '',
     description: product?.description || '',
-    category_id: product?.category_id || product?.category?.id || '',
+    category_id: product?.category_id || (product as any)?.category?.id || '',
     sales_price: product?.sales_price || 50,
     stock_qty: product?.stock_qty || 1,
     product_type: product?.product_type || 'GOODS',
