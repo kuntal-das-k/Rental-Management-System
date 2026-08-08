@@ -73,6 +73,7 @@ export class AuthService {
         name: user.name,
         email: user.email,
         role: user.role,
+        is_active: user.is_active,
         vendorId: user.vendor_profile?.id,
         companyName: user.vendor_profile?.company_name,
       },
