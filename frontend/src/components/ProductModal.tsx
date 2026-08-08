@@ -14,9 +14,19 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, on
   const isEditing = !!product;
   const queryClient = useQueryClient();
 
+  // Fetch product categories
+  const { data: categories = [] } = useQuery({
+    queryKey: ['modal-categories'],
+    queryFn: async () => {
+      const res = await api.get('/products/categories');
+      return (res.data.data as any[]) || [];
+    },
+  });
+
   const [formData, setFormData] = useState({
     name: product?.name || '',
     description: product?.description || '',
+    category_id: product?.category_id || product?.category?.id || '',
     sales_price: product?.sales_price || 50,
     stock_qty: product?.stock_qty || 1,
     product_type: product?.product_type || 'GOODS',
@@ -35,6 +45,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, on
     try {
       const payload = {
         ...formData,
+        category_id: formData.category_id || (categories[0]?.id || undefined),
         sales_price: Number(formData.sales_price),
         stock_qty: Number(formData.stock_qty),
         late_fee_per_unit: Number(formData.late_fee_per_unit),
@@ -85,6 +96,22 @@ export const ProductModal: React.FC<ProductModalProps> = ({ product, onClose, on
               placeholder="e.g. Sony FX3 Cinema Camera Kit"
               className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-cyan-500"
             />
+          </div>
+
+          <div>
+            <label className="block font-semibold text-slate-300 mb-1">Product Category *</label>
+            <select
+              value={formData.category_id}
+              onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-cyan-500"
+            >
+              <option value="">-- Select Product Category --</option>
+              {categories.map((cat: any) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name} ({cat.description || 'Equipment Category'})
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
