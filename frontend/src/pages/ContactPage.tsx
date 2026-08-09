@@ -52,13 +52,16 @@ export const ContactPage: React.FC = () => {
       try {
         // @ts-ignore
         const emailjsModule = await import('@emailjs/browser');
-        await emailjsModule.default.send(
-          EMAILJS_SERVICE_ID,
-          EMAILJS_TEMPLATE_ID,
-          templateParams,
-          EMAILJS_PUBLIC_KEY
-        );
-        emailSent = true;
+        const sendFn = emailjsModule.send || emailjsModule.default?.send || emailjsModule.default;
+        if (typeof sendFn === 'function') {
+          await sendFn(
+            EMAILJS_SERVICE_ID,
+            EMAILJS_TEMPLATE_ID,
+            templateParams,
+            EMAILJS_PUBLIC_KEY
+          );
+          emailSent = true;
+        }
       } catch (emailjsErr: any) {
         console.warn('EmailJS send note:', emailjsErr);
       }
