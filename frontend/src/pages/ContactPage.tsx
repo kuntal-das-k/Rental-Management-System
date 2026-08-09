@@ -2,13 +2,12 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { NavbarHeader } from '../components/home/NavbarHeader';
 import { api } from '../api/client';
-import { config } from '../config';
 import { Mail, Phone, MapPin, Clock, CheckCircle2, Send, Loader2 } from 'lucide-react';
 import emailjs from '@emailjs/browser';
 
-const EMAILJS_SERVICE_ID = config.emailjs.serviceId;
-const EMAILJS_TEMPLATE_ID = config.emailjs.templateId;
-const EMAILJS_PUBLIC_KEY = config.emailjs.publicKey;
+const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
 export const ContactPage: React.FC = () => {
   const location = useLocation();
