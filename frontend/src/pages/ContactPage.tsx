@@ -3,7 +3,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { NavbarHeader } from '../components/home/NavbarHeader';
 import { api } from '../api/client';
 import { Mail, Phone, MapPin, Clock, CheckCircle2, Send, Loader2 } from 'lucide-react';
-import emailjs from '@emailjs/browser';
 
 const EMAILJS_SERVICE_ID = 'service_oq4bk1e';
 const EMAILJS_TEMPLATE_ID = 'template_d58ad5d';
@@ -49,9 +48,11 @@ export const ContactPage: React.FC = () => {
 
       let emailSent = false;
 
-      // Try sending via EmailJS
+      // Try sending via EmailJS dynamically if available
       try {
-        await emailjs.send(
+        // @ts-ignore
+        const emailjsModule = await import('@emailjs/browser');
+        await emailjsModule.default.send(
           EMAILJS_SERVICE_ID,
           EMAILJS_TEMPLATE_ID,
           templateParams,
