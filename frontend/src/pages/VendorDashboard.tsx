@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/client';
 import { useAuthStore } from '../store/useAuthStore';
@@ -51,13 +51,37 @@ import {
 import { format, isToday } from 'date-fns';
 
 export const VendorDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const { user, logout, updateUser } = useAuthStore();
   const queryClient = useQueryClient();
+
+  const handleLogout = () => {
+    logout();
+    queryClient.clear();
+    navigate('/login');
+    window.location.href = '/login';
+  };
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
 
   // Active Navigation Tab
   const [activeTab, setActiveTab] = useState<
     'dashboard' | 'orders' | 'calendar' | 'inventory' | 'analytics' | 'settings' | 'support'
   >('dashboard');
+
+  const [vendorCategoryFilter, setVendorCategoryFilter] = useState<string>('ALL');
+
+  const { data: categoriesList = [] } = useQuery({
+    queryKey: ['vendor-categories-list'],
+    queryFn: async () => {
+      const res = await api.get('/products/categories');
+      return (res.data.data as any[]) || [];
+    },
+  });
 
   // Sub-views & Filters
   const [inventoryViewMode, setInventoryViewMode] = useState<'grid' | 'list'>('grid');
@@ -279,12 +303,19 @@ export const VendorDashboard: React.FC = () => {
 
   const filteredProducts = useMemo(() => {
     return productsData.filter((p) => {
-      return (
+      const matchesSearch =
         p.name.toLowerCase().includes(globalSearchQuery.toLowerCase()) ||
-        p.description?.toLowerCase().includes(globalSearchQuery.toLowerCase())
-      );
+        p.description?.toLowerCase().includes(globalSearchQuery.toLowerCase());
+
+      const matchesCategory =
+        vendorCategoryFilter === 'ALL' ||
+        p.category_id === vendorCategoryFilter ||
+        p.category?.id === vendorCategoryFilter ||
+        p.category?.name === vendorCategoryFilter;
+
+      return matchesSearch && matchesCategory;
     });
-  }, [productsData, globalSearchQuery]);
+  }, [productsData, globalSearchQuery, vendorCategoryFilter]);
 
   // Order Counts for Segmented Progress Bar & Metric Cards
   const activeRentalsCount = ordersData.filter((o) => o.state === 'PICKED_UP').length;
@@ -403,6 +434,14 @@ export const VendorDashboard: React.FC = () => {
           >
             <HelpCircle className="w-4 h-4" />
             <span>Support</span>
+          </button>
+
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-red-600 hover:bg-red-50 hover:text-red-700"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Sign Out</span>
           </button>
         </div>
       </aside>
@@ -561,7 +600,7 @@ export const VendorDashboard: React.FC = () => {
                       <button
                         onClick={() => {
                           setIsUserMenuOpen(false);
-                          logout();
+                          handleLogout();
                         }}
                         className="w-full text-left px-3.5 py-2.5 rounded-xl font-bold text-xs text-rose-600 hover:bg-rose-50 flex items-center gap-2 transition-colors border-t border-slate-100 mt-1 pt-2"
                       >
@@ -746,10 +785,21 @@ export const VendorDashboard: React.FC = () => {
                     </button>
                   </div>
 
-                  <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50">
+                  <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-2xs">
                     <Filter className="w-3.5 h-3.5 text-slate-500" />
-                    <span>Filter</span>
-                  </button>
+                    <select
+                      value={vendorCategoryFilter}
+                      onChange={(e) => setVendorCategoryFilter(e.target.value)}
+                      className="bg-transparent text-xs font-bold text-slate-700 focus:outline-none cursor-pointer"
+                    >
+                      <option value="ALL">All Categories</option>
+                      {categoriesList.map((cat: any) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
 

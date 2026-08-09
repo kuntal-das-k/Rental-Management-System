@@ -75,7 +75,7 @@ export const CommonQuestionsFAQ: React.FC = () => {
               </p>
             </div>
             <Link
-              to="/about"
+              to="/contact"
               className="bg-white text-black text-xs font-bold px-7 py-3 rounded-full hover:bg-neutral-200 transition-colors shrink-0 shadow-sm"
             >
               Contact Support

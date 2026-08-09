@@ -6,7 +6,7 @@ import { api } from '../api/client';
 import { Product } from '../types';
 
 import { NavbarHeader } from '../components/home/NavbarHeader';
-import { RentalsSidebarFilter } from '../components/rentals/RentalsSidebarFilter';
+import { RentalsSidebarFilter, CategoryOption, VendorOption } from '../components/rentals/RentalsSidebarFilter';
 import { RentalsCatalogCard, CatalogCardProps } from '../components/rentals/RentalsCatalogCard';
 import { RentalsPagination } from '../components/rentals/RentalsPagination';
 import { HomeFooter } from '../components/home/HomeFooter';
@@ -14,138 +14,90 @@ import { HomeFooter } from '../components/home/HomeFooter';
 export const RentalsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialSearch = searchParams.get('search') || '';
+  const initialCategory = searchParams.get('category') || searchParams.get('categoryId') || searchParams.get('cat') || '';
 
   const [searchQuery, setSearchQuery] = useState(initialSearch);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedDuration, setSelectedDuration] = useState('Monthly');
-  const [maxPrice, setMaxPrice] = useState(20000);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(
+    initialCategory ? [initialCategory] : []
+  );
+  const [selectedVendorId, setSelectedVendorId] = useState<string>('');
+  const [selectedDuration, setSelectedDuration] = useState('Daily');
+  const [maxPrice, setMaxPrice] = useState(50000);
   const [sortOption, setSortOption] = useState('Recommended');
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Fetch real API products
-  const { data: apiProducts, isLoading } = useQuery({
-    queryKey: ['rentals-catalog-products'],
+  // Fetch real categories
+  const { data: dbCategories = [] } = useQuery<CategoryOption[]>({
+    queryKey: ['rentals-categories'],
     queryFn: async () => {
-      const res = await api.get('/products', { params: { isPublished: true } });
-      return res.data.data as Product[];
+      const res = await api.get('/products/categories');
+      return (res.data.data as any[]) || [];
     },
   });
 
-  // Fallback items matching design reference
-  const fallbackItems: CatalogCardProps[] = [
-    {
-      id: 'prod-sony-alpha-01',
-      title: 'Sony Alpha a7 IV Mirrorless Camera',
-      description: 'Professional hybrid camera with 33MP full-frame sensor and 4K video recording.',
-      price: 2200,
-      billingCycle: '/ day',
-      isNew: true,
-      imageUrl: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80',
+  // Fetch real API products with pagination
+  const { data: apiResponse, isLoading } = useQuery({
+    queryKey: [
+      'rentals-catalog-products',
+      currentPage,
+      searchQuery,
+      selectedVendorId,
+      selectedCategories,
+      sortOption,
+    ],
+    queryFn: async () => {
+      const catParam = selectedCategories.length > 0 ? selectedCategories[0] : undefined;
+      const res = await api.get('/products', {
+        params: {
+          isPublished: true,
+          page: currentPage,
+          limit: 12,
+          search: searchQuery || undefined,
+          vendorId: selectedVendorId || undefined,
+          categoryId: catParam || undefined,
+        },
+      });
+      return res.data;
     },
-    {
-      id: 'prod-larsen-sofa-02',
-      title: 'Larsen Charcoal 3-Seater Sofa',
-      description: 'Premium fabric blend with high-density foam cushioning for refined living.',
-      price: 1800,
-      billingCycle: '/ month',
-      colorSwatches: ['#3a3b3c', '#e3d7c5', '#9ea5b1'],
-      imageUrl: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80',
-    },
-    {
-      id: 'prod-macbook-m3-03',
-      title: 'MacBook Pro 16" M3 Max',
-      description: 'Ultimate workstation for creatives. 64GB RAM, 2TB SSD storage.',
-      price: 4500,
-      billingCycle: '/ day',
-      imageUrl: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800&q=80',
-    },
-    {
-      id: 'prod-super73-04',
-      title: 'Super73-S2 Electric Cruiser Bike',
-      description: 'High-performance electric motorbike-styled cruiser with 75+ mile range.',
-      price: 1500,
-      billingCycle: '/ day',
-      isNew: true,
-      imageUrl: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=800&q=80',
-    },
-    {
-      id: 'prod-canon-r5-05',
-      title: 'Canon EOS R5 Mirrorless Body',
-      description: '45MP 8K video mirrorless camera body with RF 24-70mm lens kit.',
-      price: 75,
-      billingCycle: '/ day',
-      imageUrl: 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?auto=format&fit=crop&w=800&q=80',
-    },
-    {
-      id: 'prod-sony-fx3-06',
-      title: 'Sony FX3 Cinema Camera Kit',
-      description: 'Full-frame cinema camera with 4K 120fps capability and top handle audio.',
-      price: 85,
-      billingCycle: '/ day',
-      imageUrl: 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=800&q=80',
-    },
-  ];
+  });
 
-  // Combine or format items
+  const apiProducts: Product[] = apiResponse?.data || [];
+  const meta = apiResponse?.meta || { total: apiProducts.length, page: 1, limit: 12, totalPages: 1 };
+
+  // Build vendors list dynamically from current catalog response for filtering
+  const vendorsList: VendorOption[] = useMemo(() => {
+    const map = new Map<string, string>();
+    apiProducts.forEach((p) => {
+      if (p.vendor_id && (p as any).vendor?.company_name) {
+        map.set(p.vendor_id, (p as any).vendor.company_name);
+      }
+    });
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  }, [apiProducts]);
+
+  // Combine or format items for cards
   const catalogCards: CatalogCardProps[] = useMemo(() => {
-    if (apiProducts && apiProducts.length > 0) {
-      return apiProducts
-        .filter((p) => p.product_type !== 'SERVICE')
-        .map((p, idx) => ({
-          id: p.id,
-          title: p.name,
-          description: p.description || 'Curated high-end rental item for your lifestyle requirements.',
-          price: p.sales_price || 45,
-          billingCycle: selectedDuration === 'Monthly' ? '/ month' : '/ day',
-          isNew: idx % 2 === 0,
-          colorSwatches: idx === 1 ? ['#3a3b3c', '#e3d7c5', '#9ea5b1'] : undefined,
-          imageUrl: p.image_urls?.[0] || fallbackItems[idx % fallbackItems.length].imageUrl,
-          productRaw: p,
-        }));
-    }
-    return fallbackItems;
+    return apiProducts
+      .filter((p) => p.product_type !== 'SERVICE')
+      .map((p, idx) => ({
+        id: p.id,
+        title: p.name,
+        description: p.description || 'Curated high-end rental item for your lifestyle requirements.',
+        price: p.sales_price || 45,
+        billingCycle: selectedDuration === 'Monthly' ? '/ month' : '/ day',
+        isNew: idx % 2 === 0,
+        imageUrl: p.image_urls?.[0] || 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80',
+        vendorName: (p as any).vendor?.company_name || 'Verified Vendor',
+        vendorLogo: (p as any).vendor?.logo_url,
+        categoryName: (p as any).category?.name,
+        productRaw: p,
+      }));
   }, [apiProducts, selectedDuration]);
 
-  // Filter items based on sidebar controls & search
+  // Client side secondary price filter & sorting
   const filteredCards = useMemo(() => {
-    let result = catalogCards.filter((card) => {
-      // Search filter
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase();
-        const matchTitle = card.title.toLowerCase().includes(query);
-        const matchDesc = card.description.toLowerCase().includes(query);
-        if (!matchTitle && !matchDesc) return false;
-      }
+    let result = catalogCards.filter((card) => card.price <= maxPrice);
 
-      // Price filter
-      if (card.price > maxPrice) return false;
-
-      // Category filter (if selected)
-      if (selectedCategories.length > 0) {
-        const matchesCategory = selectedCategories.some((cat) => {
-          const t = card.title.toLowerCase();
-          const d = card.description.toLowerCase();
-          if (cat === 'electronics') {
-            return t.includes('sony') || t.includes('macbook') || t.includes('camera') || t.includes('canon') || t.includes('red');
-          }
-          if (cat === 'furniture') {
-            return t.includes('sofa') || t.includes('larsen') || d.includes('fabric') || d.includes('cushion') || t.includes('furniture');
-          }
-          if (cat === 'photography') {
-            return t.includes('sony') || t.includes('camera') || t.includes('canon') || t.includes('lens');
-          }
-          if (cat === 'sports') {
-            return t.includes('super73') || t.includes('bike') || t.includes('ev');
-          }
-          return true;
-        });
-        if (!matchesCategory) return false;
-      }
-
-      return true;
-    });
-
-    // Sorting
     if (sortOption === 'PriceLowHigh') {
       result.sort((a, b) => a.price - b.price);
     } else if (sortOption === 'PriceHighLow') {
@@ -153,13 +105,15 @@ export const RentalsPage: React.FC = () => {
     }
 
     return result;
-  }, [catalogCards, searchQuery, maxPrice, selectedCategories, sortOption]);
+  }, [catalogCards, maxPrice, sortOption]);
 
   const handleResetFilters = () => {
     setSearchQuery('');
     setSelectedCategories([]);
-    setSelectedDuration('Monthly');
-    setMaxPrice(1000);
+    setSelectedVendorId('');
+    setSelectedDuration('Daily');
+    setMaxPrice(50000);
+    setCurrentPage(1);
     setSearchParams({});
   };
 
@@ -174,11 +128,21 @@ export const RentalsPage: React.FC = () => {
           {/* Left Sidebar Filter Panel */}
           <RentalsSidebarFilter
             selectedCategories={selectedCategories}
-            onCategoryChange={setSelectedCategories}
+            onCategoryChange={(cats) => {
+              setSelectedCategories(cats);
+              setCurrentPage(1);
+            }}
+            selectedVendorId={selectedVendorId}
+            onVendorChange={(vId) => {
+              setSelectedVendorId(vId);
+              setCurrentPage(1);
+            }}
             selectedDuration={selectedDuration}
             onDurationChange={setSelectedDuration}
             maxPrice={maxPrice}
             onMaxPriceChange={setMaxPrice}
+            categoriesList={dbCategories}
+            vendorsList={vendorsList}
             onReset={handleResetFilters}
           />
 
@@ -188,10 +152,10 @@ export const RentalsPage: React.FC = () => {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-2">
               <div>
                 <h1 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 tracking-tight">
-                  Browse Rentals
+                  Browse Rental Products
                 </h1>
                 <p className="text-xs text-neutral-500 font-medium mt-0.5">
-                  Showing {filteredCards.length} high-end items for your needs.
+                  Showing {filteredCards.length} of {meta.total} vendor-listed items available for instant booking.
                 </p>
               </div>
 
@@ -203,8 +167,11 @@ export const RentalsPage: React.FC = () => {
                   <input
                     type="text"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search..."
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    placeholder="Search gear, bikes, cameras..."
                     className="w-full bg-[#efeff3] border border-neutral-200/80 text-xs text-neutral-900 placeholder-neutral-400 rounded-full pl-9 pr-4 py-2 focus:outline-none focus:border-black transition-all font-medium"
                   />
                 </div>
@@ -228,7 +195,7 @@ export const RentalsPage: React.FC = () => {
             {/* Catalog Grid */}
             {isLoading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[1, 2, 3, 4, 5, 6].map((n) => (
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((n) => (
                   <div key={n} className="h-80 rounded-3xl bg-neutral-200/60 animate-pulse" />
                 ))}
               </div>
@@ -240,7 +207,7 @@ export const RentalsPage: React.FC = () => {
               </div>
             ) : (
               <div className="bg-white rounded-3xl p-12 text-center border border-neutral-200/60 space-y-3">
-                <p className="text-sm font-bold text-neutral-800">No rental items match your criteria.</p>
+                <p className="text-sm font-bold text-neutral-800">No rental products match your current filters.</p>
                 <button
                   onClick={handleResetFilters}
                   className="text-xs font-bold text-black underline hover:no-underline"
@@ -250,11 +217,14 @@ export const RentalsPage: React.FC = () => {
               </div>
             )}
 
-            {/* Pagination Controls */}
+            {/* Server Pagination Controls */}
             <RentalsPagination
               currentPage={currentPage}
-              totalPages={3}
-              onPageChange={setCurrentPage}
+              totalPages={meta.totalPages}
+              onPageChange={(page) => {
+                setCurrentPage(page);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
             />
           </div>
         </div>
