@@ -2,11 +2,13 @@ import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useCartStore } from '../../store/useCartStore';
-import { ShoppingBag, Heart, LogOut, LayoutDashboard, UserCircle } from 'lucide-react';
+import { useLocationStore } from '../../store/useLocationStore';
+import { ShoppingBag, Heart, LogOut, LayoutDashboard, UserCircle, MapPin, Navigation, Loader2 } from 'lucide-react';
 
 export const NavbarHeader: React.FC = () => {
   const { user, logout } = useAuthStore();
   const cartItems = useCartStore((state) => state.items);
+  const { city, pincode, isDetecting, detectGPSLocation } = useLocationStore();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -26,11 +28,28 @@ export const NavbarHeader: React.FC = () => {
   return (
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-neutral-100 px-6 lg:px-16 py-4">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-        {/* Brand Logo */}
-        <Link to="/" className="flex items-center gap-1 text-xl font-bold tracking-tight text-neutral-900 group">
-          <span className="font-extrabold text-2xl tracking-tighter">Twin6</span>
-          <span className="font-medium text-2xl tracking-tight text-neutral-800">Rental</span>
-        </Link>
+        {/* Brand Logo & Location Pill */}
+        <div className="flex items-center gap-4 sm:gap-6">
+          <Link to="/" className="flex items-center gap-1 text-xl font-bold tracking-tight text-neutral-900 group">
+            <span className="font-extrabold text-2xl tracking-tighter">Twin6</span>
+            <span className="font-medium text-2xl tracking-tight text-neutral-800">Rental</span>
+          </Link>
+
+          {/* GPS Location Pill */}
+          <button
+            onClick={() => detectGPSLocation()}
+            disabled={isDetecting}
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-neutral-100 border border-neutral-200/80 text-[11px] font-bold text-neutral-700 hover:bg-neutral-200 transition-all cursor-pointer"
+            title="Click to detect current GPS Location"
+          >
+            {isDetecting ? (
+              <Loader2 className="w-3 h-3 text-neutral-900 animate-spin" />
+            ) : (
+              <MapPin className="w-3 h-3 text-emerald-600" />
+            )}
+            <span className="truncate max-w-[120px]">{city} ({pincode})</span>
+          </button>
+        </div>
 
         {/* Center Nav Links */}
         <nav className="hidden md:flex items-center gap-8">

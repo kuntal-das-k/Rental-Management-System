@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ChevronDown, RotateCcw, Store, Tag } from 'lucide-react';
+import { ChevronDown, RotateCcw, Store, Tag, MapPin, Navigation, Loader2 } from 'lucide-react';
+import { useLocationStore } from '../../store/useLocationStore';
 
 export interface CategoryOption {
   id: string;
@@ -38,6 +39,8 @@ export const RentalsSidebarFilter: React.FC<RentalsSidebarFilterProps> = ({
   vendorsList = [],
   onReset,
 }) => {
+  const { city, pincode, isDetecting, detectGPSLocation } = useLocationStore();
+
   const [openCategory, setOpenCategory] = useState(true);
   const [openVendor, setOpenVendor] = useState(true);
   const [openDuration, setOpenDuration] = useState(true);
@@ -76,6 +79,34 @@ export const RentalsSidebarFilter: React.FC<RentalsSidebarFilterProps> = ({
           <RotateCcw className="w-3 h-3" />
           <span>Reset All</span>
         </button>
+      </div>
+
+      {/* GPS Location Widget */}
+      <div className="bg-neutral-100/90 border border-neutral-200/80 p-4 rounded-2xl space-y-2.5">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-900 flex items-center gap-1">
+            <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+            <span>GPS Location</span>
+          </span>
+          <button
+            onClick={() => detectGPSLocation()}
+            disabled={isDetecting}
+            className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-black text-white hover:bg-neutral-800 transition-colors flex items-center gap-1 disabled:opacity-50"
+          >
+            {isDetecting ? (
+              <Loader2 className="w-2.5 h-2.5 animate-spin" />
+            ) : (
+              <Navigation className="w-2.5 h-2.5" />
+            )}
+            <span>Detect</span>
+          </button>
+        </div>
+        <p className="text-xs font-bold text-neutral-800 truncate">
+          📍 {city} ({pincode})
+        </p>
+        <span className="text-[10px] font-medium text-emerald-700 block">
+          Showing items available for local delivery
+        </span>
       </div>
 
       {/* Category Filter Group */}
