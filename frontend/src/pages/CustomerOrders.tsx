@@ -83,6 +83,45 @@ const ODOO_STEPS = [
   { key: 'RETURNED', label: 'Returned' },
 ];
 
+const DEFAULT_FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=300&q=80';
+
+const getValidImageUrl = (product: any): string => {
+  if (!product) return DEFAULT_FALLBACK_IMAGE;
+
+  const raw = product.image_urls || product.images || product.image;
+  if (!raw) return DEFAULT_FALLBACK_IMAGE;
+
+  let urlStr = '';
+
+  if (Array.isArray(raw)) {
+    urlStr = raw[0] || '';
+  } else if (typeof raw === 'string') {
+    const trimmed = raw.trim();
+    if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) urlStr = parsed[0] || '';
+        else if (typeof parsed === 'string') urlStr = parsed;
+      } catch {
+        urlStr = trimmed;
+      }
+    } else {
+      urlStr = trimmed;
+    }
+  }
+
+  if (!urlStr || urlStr === '[]' || urlStr === '{}') {
+    return DEFAULT_FALLBACK_IMAGE;
+  }
+
+  if (urlStr.startsWith('/uploads') || urlStr.startsWith('uploads')) {
+    const path = urlStr.startsWith('/') ? urlStr : `/${urlStr}`;
+    return `http://localhost:5000${path}`;
+  }
+
+  return urlStr;
+};
+
 export const CustomerOrders: React.FC = () => {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
@@ -324,8 +363,28 @@ export const CustomerOrders: React.FC = () => {
                     className="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 cursor-pointer hover:bg-slate-50/80 transition-colors"
                   >
                     <div className="flex items-center gap-4 flex-1 min-w-0">
-                      <div className={`w-12 h-12 rounded-2xl ${config.bg} ${config.border} border flex items-center justify-center shrink-0`}>
-                        <StateIcon className={`w-6 h-6 ${config.color}`} />
+                      {/* Product Image Thumbnail */}
+                      <div className="relative w-12 h-12 rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0 shadow-2xs flex items-center justify-center">
+                        {order.order_items && order.order_items.length > 0 ? (
+                          <img
+                            src={getValidImageUrl(order.order_items[0]?.product)}
+                            alt={order.order_items[0]?.product?.name || 'Ordered Rental Asset'}
+                            onError={(e) => {
+                              e.currentTarget.src = DEFAULT_FALLBACK_IMAGE;
+                            }}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className={`w-full h-full ${config.bg} flex items-center justify-center`}>
+                            <StateIcon className={`w-6 h-6 ${config.color}`} />
+                          </div>
+                        )}
+
+                        {order.order_items && order.order_items.length > 1 && (
+                          <span className="absolute bottom-0 right-0 bg-slate-900/90 text-white text-[9px] font-black px-1.5 py-0.5 rounded-tl-lg leading-none">
+                            +{order.order_items.length - 1}
+                          </span>
+                        )}
                       </div>
 
                       <div className="space-y-1 min-w-0">
@@ -435,11 +494,11 @@ export const CustomerOrders: React.FC = () => {
                                   <td className="py-3 px-4">
                                     <div className="flex items-center gap-3">
                                       <img
-                                        src={
-                                          item.product?.image_urls?.[0] ||
-                                          'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=300&q=80'
-                                        }
-                                        alt={item.product?.name}
+                                        src={getValidImageUrl(item.product)}
+                                        alt={item.product?.name || 'Rental Asset'}
+                                        onError={(e) => {
+                                          e.currentTarget.src = DEFAULT_FALLBACK_IMAGE;
+                                        }}
                                         className="w-9 h-9 rounded-xl object-contain bg-slate-100 border border-slate-200 shrink-0"
                                       />
                                       <div>
