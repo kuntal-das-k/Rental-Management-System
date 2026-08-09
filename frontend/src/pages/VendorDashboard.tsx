@@ -73,6 +73,16 @@ export const VendorDashboard: React.FC = () => {
     'dashboard' | 'orders' | 'calendar' | 'inventory' | 'analytics' | 'settings' | 'support'
   >('dashboard');
 
+  const [vendorCategoryFilter, setVendorCategoryFilter] = useState<string>('ALL');
+
+  const { data: categoriesList = [] } = useQuery({
+    queryKey: ['vendor-categories-list'],
+    queryFn: async () => {
+      const res = await api.get('/products/categories');
+      return (res.data.data as any[]) || [];
+    },
+  });
+
   // Sub-views & Filters
   const [inventoryViewMode, setInventoryViewMode] = useState<'grid' | 'list'>('grid');
   const [ordersViewMode, setOrdersViewMode] = useState<'table' | 'kanban'>('table');
@@ -293,12 +303,19 @@ export const VendorDashboard: React.FC = () => {
 
   const filteredProducts = useMemo(() => {
     return productsData.filter((p) => {
-      return (
+      const matchesSearch =
         p.name.toLowerCase().includes(globalSearchQuery.toLowerCase()) ||
-        p.description?.toLowerCase().includes(globalSearchQuery.toLowerCase())
-      );
+        p.description?.toLowerCase().includes(globalSearchQuery.toLowerCase());
+
+      const matchesCategory =
+        vendorCategoryFilter === 'ALL' ||
+        p.category_id === vendorCategoryFilter ||
+        p.category?.id === vendorCategoryFilter ||
+        p.category?.name === vendorCategoryFilter;
+
+      return matchesSearch && matchesCategory;
     });
-  }, [productsData, globalSearchQuery]);
+  }, [productsData, globalSearchQuery, vendorCategoryFilter]);
 
   // Order Counts for Segmented Progress Bar & Metric Cards
   const activeRentalsCount = ordersData.filter((o) => o.state === 'PICKED_UP').length;
@@ -768,10 +785,21 @@ export const VendorDashboard: React.FC = () => {
                     </button>
                   </div>
 
-                  <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50">
+                  <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-2xs">
                     <Filter className="w-3.5 h-3.5 text-slate-500" />
-                    <span>Filter</span>
-                  </button>
+                    <select
+                      value={vendorCategoryFilter}
+                      onChange={(e) => setVendorCategoryFilter(e.target.value)}
+                      className="bg-transparent text-xs font-bold text-slate-700 focus:outline-none cursor-pointer"
+                    >
+                      <option value="ALL">All Categories</option>
+                      {categoriesList.map((cat: any) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
 

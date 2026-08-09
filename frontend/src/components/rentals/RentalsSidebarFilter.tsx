@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { ChevronDown, RotateCcw } from 'lucide-react';
+import { api } from '../../api/client';
 
 interface RentalsSidebarFilterProps {
   selectedCategories: string[];
@@ -24,18 +26,31 @@ export const RentalsSidebarFilter: React.FC<RentalsSidebarFilterProps> = ({
   const [openDuration, setOpenDuration] = useState(true);
   const [openPrice, setOpenPrice] = useState(true);
 
-  const categoriesList = [
-    { id: 'electronics', label: 'Electronics' },
-    { id: 'furniture', label: 'Home & Furniture' },
-    { id: 'photography', label: 'Photography' },
-    { id: 'sports', label: 'Sports & Outdoors' },
-  ];
+  // Fetch real database categories
+  const { data: apiCategories = [] } = useQuery({
+    queryKey: ['rentals-filter-categories'],
+    queryFn: async () => {
+      const res = await api.get('/products/categories');
+      return (res.data.data as any[]) || [];
+    },
+  });
 
-  const toggleCategory = (catId: string) => {
-    if (selectedCategories.includes(catId)) {
-      onCategoryChange(selectedCategories.filter((c) => c !== catId));
+  const categoriesList = apiCategories.length > 0
+    ? apiCategories.map((c) => ({ id: c.id, name: c.name, label: c.name }))
+    : [
+        { id: 'cat-cameras', name: 'Cameras & Audio', label: 'Cameras & Audio' },
+        { id: 'cat-ev', name: 'E-Bikes & Scooters', label: 'E-Bikes & Scooters' },
+        { id: 'cat-drones', name: 'Drones & Aerial Gear', label: 'Drones & Aerial Gear' },
+        { id: 'cat-sound', name: 'Audio & Sound Systems', label: 'Audio & Sound Systems' },
+        { id: 'cat-tools', name: 'Tools & Construction Equipment', label: 'Tools & Construction Equipment' },
+        { id: 'cat-event', name: 'Event & Party Supplies', label: 'Event & Party Supplies' },
+      ];
+
+  const toggleCategory = (catIdentifier: string) => {
+    if (selectedCategories.includes(catIdentifier)) {
+      onCategoryChange(selectedCategories.filter((c) => c !== catIdentifier));
     } else {
-      onCategoryChange([...selectedCategories, catId]);
+      onCategoryChange([...selectedCategories, catIdentifier]);
     }
   };
 
@@ -68,7 +83,10 @@ export const RentalsSidebarFilter: React.FC<RentalsSidebarFilterProps> = ({
         {openCategory && (
           <div className="space-y-2.5 pt-1">
             {categoriesList.map((cat) => {
-              const isChecked = selectedCategories.includes(cat.id);
+              const isChecked =
+                selectedCategories.includes(cat.id) ||
+                selectedCategories.includes(cat.name) ||
+                selectedCategories.some((sc) => sc.toLowerCase() === cat.name.toLowerCase());
               return (
                 <label
                   key={cat.id}

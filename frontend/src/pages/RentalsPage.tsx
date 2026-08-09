@@ -14,9 +14,12 @@ import { HomeFooter } from '../components/home/HomeFooter';
 export const RentalsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialSearch = searchParams.get('search') || '';
+  const initialCategory = searchParams.get('category') || searchParams.get('categoryId') || searchParams.get('cat') || '';
 
   const [searchQuery, setSearchQuery] = useState(initialSearch);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(
+    initialCategory ? [initialCategory] : []
+  );
   const [selectedDuration, setSelectedDuration] = useState('Monthly');
   const [maxPrice, setMaxPrice] = useState(20000);
   const [sortOption, setSortOption] = useState('Recommended');
@@ -122,22 +125,24 @@ export const RentalsPage: React.FC = () => {
 
       // Category filter (if selected)
       if (selectedCategories.length > 0) {
-        const matchesCategory = selectedCategories.some((cat) => {
-          const t = card.title.toLowerCase();
-          const d = card.description.toLowerCase();
-          if (cat === 'electronics') {
-            return t.includes('sony') || t.includes('macbook') || t.includes('camera') || t.includes('canon') || t.includes('red');
+        const matchesCategory = selectedCategories.some((catFilter) => {
+          const filterLower = catFilter.toLowerCase();
+          const p = card.productRaw;
+          const rawCatId = p?.category_id || p?.category?.id;
+          const rawCatName = p?.category?.name || '';
+          const title = card.title.toLowerCase();
+          const desc = card.description.toLowerCase();
+
+          if (rawCatId && (rawCatId === catFilter || rawCatId.toLowerCase() === filterLower)) {
+            return true;
           }
-          if (cat === 'furniture') {
-            return t.includes('sofa') || t.includes('larsen') || d.includes('fabric') || d.includes('cushion') || t.includes('furniture');
+          if (rawCatName && (rawCatName.toLowerCase() === filterLower || rawCatName.toLowerCase().includes(filterLower))) {
+            return true;
           }
-          if (cat === 'photography') {
-            return t.includes('sony') || t.includes('camera') || t.includes('canon') || t.includes('lens');
+          if (title.includes(filterLower) || desc.includes(filterLower)) {
+            return true;
           }
-          if (cat === 'sports') {
-            return t.includes('super73') || t.includes('bike') || t.includes('ev');
-          }
-          return true;
+          return false;
         });
         if (!matchesCategory) return false;
       }
