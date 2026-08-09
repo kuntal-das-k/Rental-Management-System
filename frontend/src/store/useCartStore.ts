@@ -18,6 +18,7 @@ interface CartState {
 
   addItem: (item: CartItem) => void;
   removeItem: (productId: string) => void;
+  updateQuantity: (productId: string, delta: number) => void;
   setDates: (startDate: string, endDate: string) => void;
   applyCoupon: (code: string, discountType: 'PERCENT' | 'FIXED', discountValue: number) => void;
   setPickupType: (type: 'DELIVERY' | 'STORE') => void;
@@ -51,6 +52,21 @@ export const useCartStore = create<CartState>((set) => ({
       return { items: updatedItems };
     }),
 
+  updateQuantity: (productId, delta) =>
+    set((state) => {
+      const updatedItems = state.items
+        .map((i) => {
+          if (i.product.id === productId) {
+            const newQty = i.quantity + delta;
+            return newQty > 0 ? { ...i, quantity: newQty } : null;
+          }
+          return i;
+        })
+        .filter(Boolean) as CartItem[];
+      localStorage.setItem('twinsix_cart', JSON.stringify(updatedItems));
+      return { items: updatedItems };
+    }),
+
   setDates: (startDate, endDate) =>
     set((state) => {
       const updatedItems = state.items.map((i) => ({ ...i, startDate, endDate }));
@@ -68,3 +84,4 @@ export const useCartStore = create<CartState>((set) => ({
     set({ items: [], couponCode: null, discountType: null, discountValue: 0 });
   },
 }));
+

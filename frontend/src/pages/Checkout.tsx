@@ -16,13 +16,26 @@ import {
   Loader2,
   ShoppingBag,
   ChevronRight,
+  Plus,
+  Minus,
+  Trash2,
 } from 'lucide-react';
 
 export const Checkout: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
-  const { items, couponCode, discountType, discountValue, pickupType, setPickupType, clearCart } = useCartStore();
+  const {
+    items,
+    couponCode,
+    discountType,
+    discountValue,
+    pickupType,
+    setPickupType,
+    removeItem,
+    updateQuantity,
+    clearCart,
+  } = useCartStore();
 
   const [email, setEmail] = useState(user?.email || 'customer@twinsix.com');
   const [phone, setPhone] = useState('+1 (555) 234-5678');
@@ -276,15 +289,24 @@ export const Checkout: React.FC = () => {
           {/* Right Column: Order Summary Box */}
           <div className="lg:col-span-5 space-y-6">
             <div className="bg-slate-950 text-white rounded-3xl p-6 shadow-xl space-y-6">
-              <h3 className="text-sm font-extrabold text-white border-b border-slate-800 pb-3">
-                Order Summary
-              </h3>
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 className="text-sm font-extrabold text-white">
+                  Order Summary
+                </h3>
+                <Link
+                  to="/rentals"
+                  className="text-[11px] font-bold text-slate-400 hover:text-white flex items-center gap-1 transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5 text-slate-300" />
+                  <span>Add More Products</span>
+                </Link>
+              </div>
 
               {/* Items List */}
               <div className="space-y-4">
                 {items.map((item) => (
-                  <div key={item.product.id} className="flex items-center gap-3.5 text-xs">
-                    <div className="w-14 h-14 aspect-square rounded-xl bg-[#F1F3F5] border border-slate-800 overflow-hidden flex items-center justify-center p-1.5 shrink-0">
+                  <div key={item.product.id} className="flex items-center gap-3.5 text-xs bg-slate-900/60 p-3 rounded-2xl border border-slate-800/80">
+                    <div className="w-14 h-14 aspect-square rounded-xl bg-white overflow-hidden flex items-center justify-center p-1 shrink-0">
                       <img
                         src={
                           item.product.image_urls[0] ||
@@ -294,15 +316,53 @@ export const Checkout: React.FC = () => {
                         className="w-full h-full object-contain"
                       />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-bold text-white truncate">{item.product.name}</h4>
-                      <p className="text-[11px] text-slate-400 font-medium mt-0.5">
-                        Qty: {item.quantity} | {durationDays} days
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <h4 className="font-bold text-white truncate text-xs">{item.product.name}</h4>
+                      <p className="text-[11px] text-slate-400 font-medium">
+                        {durationDays} days duration
                       </p>
+
+                      {/* Quantity Stepper (+ / -) & Remove Button */}
+                      <div className="flex items-center gap-3 pt-1">
+                        <div className="flex items-center gap-2 bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-700">
+                          <button
+                            type="button"
+                            onClick={() => updateQuantity(item.product.id, -1)}
+                            className="text-slate-300 hover:text-white font-bold p-0.5 transition-colors"
+                            title="Decrease quantity"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </button>
+                          <span className="text-xs font-bold text-white px-1">{item.quantity}</span>
+                          <button
+                            type="button"
+                            onClick={() => updateQuantity(item.product.id, 1)}
+                            className="text-slate-300 hover:text-white font-bold p-0.5 transition-colors"
+                            title="Increase quantity"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => removeItem(item.product.id)}
+                          className="text-slate-500 hover:text-rose-400 p-1 transition-colors"
+                          title="Remove item from order"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
-                    <span className="font-extrabold text-white shrink-0">
-                      ₹{(item.product.sales_price * durationDays * item.quantity).toFixed(2)}
-                    </span>
+
+                    <div className="text-right shrink-0">
+                      <span className="font-extrabold text-white block text-sm">
+                        ₹{(item.product.sales_price * durationDays * item.quantity).toFixed(2)}
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-medium">
+                        ₹{item.product.sales_price}/day
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>
