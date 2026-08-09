@@ -38,9 +38,10 @@ const DiscountType = {
 };
 
 async function main() {
-  console.log('🌱 Starting TwinSix Rentals seed script (250+ Products)...');
+  console.log('🌱 Starting TwinSix Rentals comprehensive seed script (350+ Entities)...');
 
-  // Clean DB
+  // Clean DB safely
+  await prisma.contactMessage.deleteMany();
   await prisma.wishlist.deleteMany();
   await prisma.notification.deleteMany();
   await prisma.pickupReturnLog.deleteMany();
@@ -196,7 +197,7 @@ async function main() {
 
   console.log('✅ 5 Vendor users created successfully.');
 
-  // 3. Customer Users
+  // 3. Customer Users (5 Customers)
   const customer1 = await prisma.user.create({
     data: {
       first_name: 'Alex',
@@ -209,7 +210,7 @@ async function main() {
       addresses: {
         create: {
           line1: '42 Wallaby Way',
-          city: 'Tech Hub',
+          city: 'Los Angeles',
           state: 'California',
           pincode: '90001',
           is_default: true,
@@ -230,7 +231,7 @@ async function main() {
       addresses: {
         create: {
           line1: '742 Evergreen Terrace',
-          city: 'Metro City',
+          city: 'New York',
           state: 'New York',
           pincode: '10001',
           is_default: true,
@@ -238,9 +239,74 @@ async function main() {
       },
     },
   });
-  console.log('✅ Customer users created.');
 
-  // 4. Categories (8 Categories)
+  const customer3 = await prisma.user.create({
+    data: {
+      first_name: 'Sophia',
+      last_name: 'Taylor',
+      name: 'Sophia Taylor',
+      email: 'customer3@gmail.com',
+      password_hash: passwordHash,
+      role: Role.CUSTOMER,
+      is_active: true,
+      addresses: {
+        create: {
+          line1: '1200 Market Street',
+          city: 'Austin',
+          state: 'Texas',
+          pincode: '73301',
+          is_default: true,
+        },
+      },
+    },
+  });
+
+  const customer4 = await prisma.user.create({
+    data: {
+      first_name: 'James',
+      last_name: 'Wilson',
+      name: 'James Wilson',
+      email: 'customer4@gmail.com',
+      password_hash: passwordHash,
+      role: Role.CUSTOMER,
+      is_active: true,
+      addresses: {
+        create: {
+          line1: '500 Ocean Drive',
+          city: 'Miami',
+          state: 'Florida',
+          pincode: '33139',
+          is_default: true,
+        },
+      },
+    },
+  });
+
+  const customer5 = await prisma.user.create({
+    data: {
+      first_name: 'Olivia',
+      last_name: 'Davis',
+      name: 'Olivia Davis',
+      email: 'customer5@gmail.com',
+      password_hash: passwordHash,
+      role: Role.CUSTOMER,
+      is_active: true,
+      addresses: {
+        create: {
+          line1: '88 Pike Street',
+          city: 'Seattle',
+          state: 'Washington',
+          pincode: '98101',
+          is_default: true,
+        },
+      },
+    },
+  });
+
+  const customers = [customer1, customer2, customer3, customer4, customer5];
+  console.log('✅ 5 Customer users created.');
+
+  // 4. Categories (9 Categories)
   const catCamera = await prisma.category.create({ data: { name: 'Cameras & Audio', description: 'DSLRs, Cinema gear, lenses, microphones, audio recorders' } });
   const catEV = await prisma.category.create({ data: { name: 'E-Bikes & Scooters', description: 'Urban electric transport, scooters, moped rentals' } });
   const catDrone = await prisma.category.create({ data: { name: 'Drones & Aerial Gear', description: '4K Drones, FPV setups, gimbals, cinema aerial rigs' } });
@@ -277,11 +343,11 @@ async function main() {
   });
 
   // 6. Rental Periods
-  await prisma.rentalPeriod.create({ data: { name: 'Daily', unit: FeeBasis.DAILY, min_duration: 1, max_duration: 30 } });
+  const periodDaily = await prisma.rentalPeriod.create({ data: { name: 'Daily', unit: FeeBasis.DAILY, min_duration: 1, max_duration: 30 } });
   await prisma.rentalPeriod.create({ data: { name: 'Monthly', unit: FeeBasis.MONTHLY, min_duration: 1, max_duration: 12 } });
 
-  // 7. Security Deposit Service Products
-  await prisma.product.create({
+  // 7. Security Deposit Service Product
+  const depositProduct1 = await prisma.product.create({
     data: {
       vendor_id: vendorUser1.vendor_profile!.id,
       category_id: catService.id,
@@ -298,7 +364,7 @@ async function main() {
     },
   });
 
-  // 8. Main Anchor Rentable Products (Explicitly saved for Orders/Pricelists references)
+  // 8. Main Rentable Products (Good items)
   const prod1 = await prisma.product.create({
     data: {
       vendor_id: vendorUser1.vendor_profile!.id,
@@ -385,8 +451,8 @@ async function main() {
     },
   });
 
-  // 9. Bulk Product Generator (280 Products across 8 Categories)
-  console.log('⚡ Generating 280+ realistic catalog products...');
+  // 9. Bulk Product Generator (320 Products across 8 Categories - 40 per category)
+  console.log('⚡ Generating 320+ realistic catalog products...');
 
   const categoryTemplates = [
     {
@@ -403,11 +469,6 @@ async function main() {
         { title: 'Sigma 18-35mm f/1.8 DC HSM Art Lens', img: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?auto=format&fit=crop&w=800&q=80', price: 350, deposit: 1000 },
         { title: 'DJI RS 3 Pro Gimbal Stabilizer Combo', img: 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=800&q=80', price: 850, deposit: 2500 },
         { title: 'Aputure 600d Pro Daylight LED Light', img: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=800&q=80', price: 1100, deposit: 3000 },
-        { title: 'Nanlite Pavotube II 30X RGB Tube Lights (Set of 4)', img: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=800&q=80', price: 950, deposit: 2800 },
-        { title: 'Manfrotto 504HD Fluid Head & Carbon Tripod', img: 'https://images.unsplash.com/photo-1520390138845-fd2d229dd553?auto=format&fit=crop&w=800&q=80', price: 400, deposit: 1200 },
-        { title: 'SmallHD 703 UltraBright Wireless Monitor', img: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=800&q=80', price: 900, deposit: 2500 },
-        { title: 'Teradek Bolt 4K LT 750 Wireless Video Transceiver', img: 'https://images.unsplash.com/photo-1589254065878-42c9da997008?auto=format&fit=crop&w=800&q=80', price: 1500, deposit: 4500 },
-        { title: 'Fujinon MK18-55mm T2.9 Cine Zoom Lens', img: 'https://images.unsplash.com/photo-1512790182412-b19e6d61b397?auto=format&fit=crop&w=800&q=80', price: 1300, deposit: 3800 },
       ]
     },
     {
@@ -438,6 +499,8 @@ async function main() {
         { title: 'DJI Goggles 3 FPV Headset System', img: 'https://images.unsplash.com/photo-1507582020474-9a35b7d455d9?auto=format&fit=crop&w=800&q=80', price: 450, deposit: 1500 },
         { title: 'DJI Matrice 300 RTK Industrial Survey Drone', img: 'https://images.unsplash.com/photo-1527977966376-1c8408f9f108?auto=format&fit=crop&w=800&q=80', price: 7500, deposit: 25000 },
         { title: 'Freefly Alta X Cinema Heavy-Lift Rig', img: 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=800&q=80', price: 9000, deposit: 30000 },
+        { title: 'Skydio 2+ Autonomous Cinema Drone Kit', img: 'https://images.unsplash.com/photo-1527977966376-1c8408f9f108?auto=format&fit=crop&w=800&q=80', price: 2100, deposit: 6000 },
+        { title: 'Flyability Elios 3 Indoor Inspection Drone', img: 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=800&q=80', price: 8200, deposit: 28000 },
       ]
     },
     {
@@ -452,6 +515,8 @@ async function main() {
         { title: 'Behringer X32 40-Input Digital Mixer System', img: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=800&q=80', price: 1900, deposit: 6000 },
         { title: 'Electro-Voice EVOLVE 50M Column Speaker System', img: 'https://images.unsplash.com/photo-1545454675-3531b543be5d?auto=format&fit=crop&w=800&q=80', price: 1200, deposit: 4000 },
         { title: 'Sennheiser G4 Wireless In-Ear Monitor Rack Kit', img: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=800&q=80', price: 1600, deposit: 5000 },
+        { title: 'Yamaha DXR15mkII 1100W 15" Powered Speaker', img: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=800&q=80', price: 900, deposit: 2800 },
+        { title: 'Soundcraft Vi1000 Digital Live Sound Console', img: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=800&q=80', price: 4200, deposit: 14000 },
       ]
     },
     {
@@ -466,6 +531,8 @@ async function main() {
         { title: 'Kushlan 6 cu. ft. Portable Cement Mixer', img: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80', price: 800, deposit: 2500 },
         { title: 'Bosch GRL1000-20HV Self-Leveling Rotary Laser Level', img: 'https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=800&q=80', price: 700, deposit: 2200 },
         { title: 'Bostitch 3-Tool Portable Air Compressor Combo Kit', img: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80', price: 450, deposit: 1400 },
+        { title: 'Makita HM1812 70 lb. Advanced AVT Breaker Hammer', img: 'https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=800&q=80', price: 1600, deposit: 5000 },
+        { title: 'Toro TimeMaster 30" Self-Propelled Gas Lawn Mower', img: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80', price: 750, deposit: 2400 },
       ]
     },
     {
@@ -480,6 +547,8 @@ async function main() {
         { title: '120-Inch Outdoor Inflatable Movie Screen & Blower', img: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=800&q=80', price: 650, deposit: 2000 },
         { title: 'Commercial Stainless Steel Outdoor Patio Heater (Set of 4)', img: 'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=800&q=80', price: 1200, deposit: 4000 },
         { title: 'White Resin Folding Wedding Chairs (Set of 50)', img: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=800&q=80', price: 1500, deposit: 4500 },
+        { title: 'Sephra Commercial Chocolate Fountain Rig', img: 'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?auto=format&fit=crop&w=800&q=80', price: 800, deposit: 2500 },
+        { title: 'LED Illuminated Cocktail Bar Counter Setup', img: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80', price: 2100, deposit: 6500 },
       ]
     },
     {
@@ -494,6 +563,8 @@ async function main() {
         { title: 'Perception Pescador Pro 12 Tandem Kayak', img: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80', price: 850, deposit: 2800 },
         { title: 'Thule Motion XT XXL Rooftop Cargo Box', img: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=800&q=80', price: 700, deposit: 2200 },
         { title: 'Tentsile Stingray 3-Person Tree Tent', img: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=800&q=80', price: 600, deposit: 2000 },
+        { title: 'Bluetti AC200MAX Expandable Power Station', img: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=800&q=80', price: 1550, deposit: 5000 },
+        { title: 'Almost Heaven 4-Person Outdoor Wood Sauna', img: 'https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=800&q=80', price: 3800, deposit: 12000 },
       ]
     },
     {
@@ -508,6 +579,8 @@ async function main() {
         { title: 'Nintendo Switch OLED 4-Player Party Bundle', img: 'https://images.unsplash.com/photo-1578303512597-81e6cc155b3e?auto=format&fit=crop&w=800&q=80', price: 600, deposit: 1800 },
         { title: 'Thrustmaster HOTAS Warthog Flight Simulator Rig', img: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=800&q=80', price: 1200, deposit: 4000 },
         { title: 'Steam Deck OLED 1TB Handheld Gaming Rig', img: 'https://images.unsplash.com/photo-1622979135225-d2ba269bc1bd?auto=format&fit=crop&w=800&q=80', price: 700, deposit: 2000 },
+        { title: 'Asus ROG Ally Z1 Extreme Handheld Console', img: 'https://images.unsplash.com/photo-1622979135225-d2ba269bc1bd?auto=format&fit=crop&w=800&q=80', price: 750, deposit: 2200 },
+        { title: 'Logitech G Flight Yoke & Rudder Pedals System', img: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?auto=format&fit=crop&w=800&q=80', price: 1100, deposit: 3500 },
       ]
     }
   ];
@@ -555,8 +628,8 @@ async function main() {
     });
   }
 
-  const totalCount = await prisma.product.count();
-  console.log(`✅ Seeded catalog. Total products in database: ${totalCount}`);
+  const totalProductCount = await prisma.product.count();
+  console.log(`✅ Seeded catalog. Total products in database: ${totalProductCount}`);
 
   // 10. Pricelists & Rules
   await prisma.pricelist.create({
@@ -618,7 +691,7 @@ async function main() {
     },
   });
 
-  // 12. Coupons
+  // 12. Coupons (5 Active Promo Codes)
   await prisma.coupon.create({
     data: {
       code: 'TWINSIX10',
@@ -643,6 +716,42 @@ async function main() {
     },
   });
 
+  await prisma.coupon.create({
+    data: {
+      code: 'WELCOME20',
+      discount_type: DiscountType.PERCENT,
+      discount_value: 20,
+      valid_from: new Date('2026-01-01'),
+      valid_to: new Date('2027-12-31'),
+      usage_limit: 1000,
+      times_used: 45,
+    },
+  });
+
+  await prisma.coupon.create({
+    data: {
+      code: 'FREEDELIVERY',
+      discount_type: DiscountType.FIXED,
+      discount_value: 300,
+      valid_from: new Date('2026-01-01'),
+      valid_to: new Date('2027-12-31'),
+      usage_limit: 250,
+      times_used: 18,
+    },
+  });
+
+  await prisma.coupon.create({
+    data: {
+      code: 'SUMMER50',
+      discount_type: DiscountType.PERCENT,
+      discount_value: 15,
+      valid_from: new Date('2026-01-01'),
+      valid_to: new Date('2027-12-31'),
+      usage_limit: 300,
+      times_used: 8,
+    },
+  });
+
   // 13. Quotation Templates
   await prisma.quotationTemplate.create({
     data: {
@@ -654,89 +763,140 @@ async function main() {
     },
   });
 
-  // 14. Sample Orders & Payments
+  // 14. Sample Orders & Payments (30 Realistic Orders Across All States)
+  console.log('⚡ Generating 30 sample orders, payments, and invoices...');
+
   const now = new Date();
-  const todayEnd = new Date(now); todayEnd.setHours(23, 59, 59, 999);
-  
-  const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
-  const twoDaysAgo = new Date(now); twoDaysAgo.setDate(now.getDate() - 2);
-  const threeDaysAgo = new Date(now); threeDaysAgo.setDate(now.getDate() - 3);
-  const inTwoDays = new Date(now); inTwoDays.setDate(now.getDate() + 2);
-  const inFiveDays = new Date(now); inFiveDays.setDate(now.getDate() + 5);
 
-  await prisma.order.create({
-    data: {
-      customer_id: customer1.id,
-      vendor_id: vendorUser1.vendor_profile!.id,
-      state: 'SALES_ORDER',
-      scheduled_pickup_at: inTwoDays,
-      scheduled_return_at: inFiveDays,
-      total_amount: 7500.00,
-      created_at: threeDaysAgo,
-      order_items: {
-        create: [
-          { product_id: prod1.id, quantity: 1, unit_price: 2500.00, line_total: 7500.00 }
-        ]
-      },
-      payments: {
-        create: [
-          { amount: 7500.00, type: 'RENTAL', status: 'COMPLETED', method: 'CREDIT_CARD', transaction_ref: 'TXN-90123' },
-          { amount: 8000.00, type: 'DEPOSIT', status: 'COMPLETED', method: 'CREDIT_CARD', transaction_ref: 'DEP-90123' }
-        ]
+  for (let i = 1; i <= 30; i++) {
+    const cust = customers[i % customers.length];
+    const vendId = vendors[i % vendors.length];
+    const daysOffset = (i % 7) - 3; // spread dates past and future
+    
+    const pickupDate = new Date(now);
+    pickupDate.setDate(now.getDate() + daysOffset);
+
+    const returnDate = new Date(pickupDate);
+    returnDate.setDate(pickupDate.getDate() + 3 + (i % 4));
+
+    let state = 'SALES_ORDER';
+    let isLate = false;
+    let actualReturn = null;
+
+    if (daysOffset < -2) {
+      state = 'RETURNED';
+      actualReturn = returnDate;
+    } else if (daysOffset < 0) {
+      state = 'PICKED_UP';
+      if (i % 3 === 0) {
+        isLate = true;
       }
+    } else if (i % 5 === 0) {
+      state = 'QUOTATION';
     }
+
+    const itemPrice = 1200 + (i * 150);
+    const orderTotal = itemPrice * 3;
+
+    const createdOrder = await prisma.order.create({
+      data: {
+        customer_id: cust.id,
+        vendor_id: vendId,
+        state: state,
+        scheduled_pickup_at: pickupDate,
+        scheduled_return_at: returnDate,
+        actual_return_at: actualReturn,
+        is_late: isLate,
+        total_amount: orderTotal,
+        created_at: new Date(now.getTime() - (i * 86400000)),
+        order_items: {
+          create: [
+            {
+              product_id: i % 2 === 0 ? prod1.id : prod2.id,
+              quantity: 1 + (i % 2),
+              unit_price: itemPrice,
+              line_total: orderTotal,
+            },
+          ],
+        },
+        payments: {
+          create: [
+            {
+              amount: orderTotal,
+              type: 'RENTAL',
+              status: 'COMPLETED',
+              method: i % 2 === 0 ? 'CREDIT_CARD' : 'UPI',
+              transaction_ref: `TXN-${90000 + i}`,
+            },
+            {
+              amount: 5000,
+              type: 'DEPOSIT',
+              status: 'COMPLETED',
+              method: 'CREDIT_CARD',
+              transaction_ref: `DEP-${90000 + i}`,
+            },
+          ],
+        },
+        invoices: {
+          create: [
+            {
+              invoice_number: `INV-2026-${i.toString().padStart(3, '0')}`,
+              status: state === 'RETURNED' ? 'PAID' : 'POSTED',
+            },
+          ],
+        },
+      },
+    });
+
+    // Seed Wishlist & Notifications for test customer
+    if (i <= 5) {
+      await prisma.wishlist.create({
+        data: {
+          customer_id: cust.id,
+          product_id: i % 2 === 0 ? prod1.id : prod3.id,
+        },
+      }).catch(() => {});
+
+      await prisma.notification.create({
+        data: {
+          user_id: cust.id,
+          type: 'ORDER_STATUS_CHANGED',
+          channel: 'IN_APP',
+          payload: JSON.stringify({ orderId: createdOrder.id, state: state }),
+          status: 'UNREAD',
+        },
+      });
+    }
+  }
+
+  // 15. Contact Messages
+  await prisma.contactMessage.createMany({
+    data: [
+      {
+        name: 'Sarah Connor',
+        email: 'sarah@skynet-test.com',
+        topic: 'Corporate Equipment Rental Inquiry',
+        message: 'Hi, we would like to rent 10 RED cinema camera rigs for an upcoming 3-month feature film shoot in California.',
+        status: 'UNREAD',
+      },
+      {
+        name: 'Michael Scott',
+        email: 'mscott@dundermifflin.com',
+        topic: 'Event Staging & Lighting',
+        message: 'Looking for marquee tents and sound systems for our annual Dundies award ceremony.',
+        status: 'UNREAD',
+      },
+    ],
   });
 
-  await prisma.order.create({
-    data: {
-      customer_id: customer2.id,
-      vendor_id: vendorUser2.vendor_profile!.id,
-      state: 'PICKED_UP',
-      scheduled_pickup_at: twoDaysAgo,
-      scheduled_return_at: todayEnd,
-      total_amount: 4500.00,
-      created_at: twoDaysAgo,
-      order_items: {
-        create: [
-          { product_id: prod3.id, quantity: 1, unit_price: 1500.00, line_total: 4500.00 }
-        ]
-      },
-      payments: {
-        create: [
-          { amount: 4500.00, type: 'RENTAL', status: 'COMPLETED', method: 'CREDIT_CARD', transaction_ref: 'TXN-90124' },
-          { amount: 5000.00, type: 'DEPOSIT', status: 'COMPLETED', method: 'CREDIT_CARD', transaction_ref: 'DEP-90124' }
-        ]
-      }
-    }
-  });
+  const totalUserCount = await prisma.user.count();
+  const totalOrderCount = await prisma.order.count();
+  const totalInvoiceCount = await prisma.invoice.count();
 
-  await prisma.order.create({
-    data: {
-      customer_id: customer1.id,
-      vendor_id: vendorUser1.vendor_profile!.id,
-      state: 'PICKED_UP',
-      scheduled_pickup_at: threeDaysAgo,
-      scheduled_return_at: yesterday,
-      is_late: true,
-      total_amount: 8800.00,
-      created_at: threeDaysAgo,
-      order_items: {
-        create: [
-          { product_id: prod2.id, quantity: 1, unit_price: 2200.00, line_total: 8800.00 }
-        ]
-      },
-      payments: {
-        create: [
-          { amount: 8800.00, type: 'RENTAL', status: 'COMPLETED', method: 'CREDIT_CARD', transaction_ref: 'TXN-90125' },
-          { amount: 6000.00, type: 'DEPOSIT', status: 'COMPLETED', method: 'CREDIT_CARD', transaction_ref: 'DEP-90125' },
-          { amount: 400.00, type: 'LATE_FEE', status: 'COMPLETED', method: 'CREDIT_CARD', transaction_ref: 'FEE-90125' }
-        ]
-      }
-    }
-  });
-
-  console.log('✅ Sample orders & payments created successfully.');
-  console.log(`🎉 Finished seeding! Total products in database: ${totalCount}`);
+  console.log(`✅ Users count: ${totalUserCount}`);
+  console.log(`✅ Orders count: ${totalOrderCount}`);
+  console.log(`✅ Invoices count: ${totalInvoiceCount}`);
+  console.log(`🎉 Finished seeding! Total products in database: ${totalProductCount}`);
 }
 
 main()
