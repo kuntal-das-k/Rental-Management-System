@@ -29,31 +29,14 @@ export class OrderService {
     const scheduledPickupInput = data.scheduled_pickup_at || data.scheduledPickupAt;
     const scheduledReturnInput = data.scheduled_return_at || data.scheduledReturnAt;
 
-    // 2. Verify vendor exists. If vendor_id is a User ID or stale, resolve valid Vendor record
-    let vendor = vendorIdInput ? await prisma.vendor.findUnique({ where: { id: vendorIdInput } }) : null;
-    if (!vendor && vendorIdInput) {
-      vendor = await prisma.vendor.findUnique({ where: { user_id: vendorIdInput } });
-    }
-    if (!vendor) {
-      vendor = await prisma.vendor.findFirst();
-      if (!vendor) throw new Error('No valid vendor found to process order.');
-    }
-
-    // 3. Verify product IDs and fallback if needed
+    // 2. Verify product IDs and build valid items array
     const validItems = [];
     const rawItems = data.items || [];
     for (const item of rawItems) {
       const productId = item.product_id || item.productId;
       let product = productId ? await prisma.product.findUnique({ where: { id: productId } }) : null;
       if (!product) {
-        const fallbackProduct =
-          (await prisma.product.findFirst({ where: { vendor_id: vendor.id } })) ||
-          (await prisma.product.findFirst());
-        if (fallbackProduct) {
-          product = fallbackProduct;
-        } else {
-          continue;
-        }
+        continue;
       }
       const qty = item.quantity || 1;
       const unitPrice = item.unit_price || item.unitPrice || product.sales_price;
@@ -65,6 +48,29 @@ export class OrderService {
         unit_price: unitPrice,
         line_total: lineTotal,
       });
+    }
+
+    if (validItems.length === 0) {
+      throw new Error('No valid products selected for the order.');
+    }
+
+    // 3. Resolve actual vendor profile from input or from the ordered product
+    let vendor = vendorIdInput ? await prisma.vendor.findUnique({ where: { id: vendorIdInput } }) : null;
+    if (!vendor && vendorIdInput) {
+      vendor = await prisma.vendor.findUnique({ where: { user_id: vendorIdInput } });
+    }
+
+    // Look up the first product's owner if vendor not found yet
+    if (!vendor && validItems.length > 0) {
+      const firstProd = await prisma.product.findUnique({ where: { id: validItems[0].product_id } });
+      if (firstProd && firstProd.vendor_id) {
+        vendor = await prisma.vendor.findUnique({ where: { id: firstProd.vendor_id } });
+      }
+    }
+
+    if (!vendor) {
+      vendor = await prisma.vendor.findFirst();
+      if (!vendor) throw new Error('No valid vendor found to process order.');
     }
 
     if (validItems.length === 0) {

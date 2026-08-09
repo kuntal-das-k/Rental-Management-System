@@ -93,7 +93,13 @@ export const Checkout: React.FC = () => {
     setIsProcessing(true);
 
     try {
-      // 1. Prepare Order payload
+      // 1. Resolve target vendor ID cleanly
+      const targetVendorId =
+        mainItem.product.vendor_id ||
+        (mainItem.product as any).vendorId ||
+        (mainItem.product.vendor as any)?.id;
+
+      // 2. Prepare Order items payload
       const orderItems = items.map((item) => ({
         product_id: item.product.id,
         quantity: item.quantity,
@@ -101,19 +107,9 @@ export const Checkout: React.FC = () => {
         line_total: item.product.sales_price * durationDays * item.quantity,
       }));
 
-      // Attach security deposit service product item if deposit exists
-      if (depositsTotal > 0 && mainItem.product.vendor_id) {
-        orderItems.push({
-          product_id: mainItem.product.id,
-          quantity: 1,
-          unit_price: depositsTotal,
-          line_total: depositsTotal,
-        });
-      }
-
-      // 2. Call API to create order
+      // 3. Call API to create order
       const res = await api.post('/orders', {
-        vendor_id: mainItem.product.vendor_id,
+        vendor_id: targetVendorId,
         scheduled_pickup_at: mainItem.startDate,
         scheduled_return_at: mainItem.endDate,
         pickup_type: pickupType,
@@ -122,7 +118,7 @@ export const Checkout: React.FC = () => {
 
       const newOrder = res.data.data;
 
-      // 3. Confirm order & generate invoice
+      // 4. Confirm order & generate invoice
       await api.patch(`/orders/${newOrder.id}/confirm`);
       const invRes = await api.post(`/orders/${newOrder.id}/create-invoice`);
 
