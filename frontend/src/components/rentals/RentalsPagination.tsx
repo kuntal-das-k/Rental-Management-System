@@ -9,10 +9,45 @@ interface RentalsPaginationProps {
 
 export const RentalsPagination: React.FC<RentalsPaginationProps> = ({
   currentPage = 1,
-  totalPages = 3,
+  totalPages = 1,
   onPageChange,
 }) => {
-  const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+  if (totalPages <= 1) return null;
+
+  // Generate pagination items window (e.g. 1 2 3 4 5 ... 25)
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    const maxVisible = 5;
+
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      let start = Math.max(1, currentPage - 2);
+      let end = Math.min(totalPages, start + maxVisible - 1);
+
+      if (end === totalPages) {
+        start = Math.max(1, end - maxVisible + 1);
+      }
+
+      if (start > 1) {
+        pages.push(1);
+        if (start > 2) pages.push('...');
+      }
+
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+
+      if (end < totalPages) {
+        if (end < totalPages - 1) pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+
+    return pages;
+  };
+
+  const pageItems = getPageNumbers();
 
   return (
     <div className="flex items-center justify-center gap-2 pt-12 pb-6">
@@ -27,7 +62,15 @@ export const RentalsPagination: React.FC<RentalsPaginationProps> = ({
       </button>
 
       {/* Numeric Page Buttons */}
-      {pages.map((p) => {
+      {pageItems.map((p, idx) => {
+        if (typeof p === 'string') {
+          return (
+            <span key={`ellipsis-${idx}`} className="text-neutral-400 text-xs font-bold px-1 select-none">
+              ...
+            </span>
+          );
+        }
+
         const isActive = p === currentPage;
         return (
           <button
@@ -44,9 +87,6 @@ export const RentalsPagination: React.FC<RentalsPaginationProps> = ({
         );
       })}
 
-      {/* Ellipsis indicator if more pages */}
-      {totalPages > 3 && <span className="text-neutral-400 text-xs font-bold px-1">...</span>}
-
       {/* Next Page */}
       <button
         disabled={currentPage >= totalPages}
@@ -59,3 +99,4 @@ export const RentalsPagination: React.FC<RentalsPaginationProps> = ({
     </div>
   );
 };
+

@@ -1,56 +1,66 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { ChevronDown, RotateCcw } from 'lucide-react';
-import { api } from '../../api/client';
+import { ChevronDown, RotateCcw, Store, Tag } from 'lucide-react';
+
+export interface CategoryOption {
+  id: string;
+  name: string;
+}
+
+export interface VendorOption {
+  id: string;
+  name: string;
+}
 
 interface RentalsSidebarFilterProps {
   selectedCategories: string[];
   onCategoryChange: (categories: string[]) => void;
+  selectedVendorId: string;
+  onVendorChange: (vendorId: string) => void;
   selectedDuration: string;
   onDurationChange: (duration: string) => void;
   maxPrice: number;
   onMaxPriceChange: (price: number) => void;
+  categoriesList?: CategoryOption[];
+  vendorsList?: VendorOption[];
   onReset: () => void;
 }
 
 export const RentalsSidebarFilter: React.FC<RentalsSidebarFilterProps> = ({
   selectedCategories,
   onCategoryChange,
+  selectedVendorId,
+  onVendorChange,
   selectedDuration,
   onDurationChange,
   maxPrice,
   onMaxPriceChange,
+  categoriesList = [],
+  vendorsList = [],
   onReset,
 }) => {
   const [openCategory, setOpenCategory] = useState(true);
+  const [openVendor, setOpenVendor] = useState(true);
   const [openDuration, setOpenDuration] = useState(true);
   const [openPrice, setOpenPrice] = useState(true);
 
-  // Fetch real database categories
-  const { data: apiCategories = [] } = useQuery({
-    queryKey: ['rentals-filter-categories'],
-    queryFn: async () => {
-      const res = await api.get('/products/categories');
-      return (res.data.data as any[]) || [];
-    },
-  });
+  const defaultCategories = [
+    { id: 'cat-cam', name: 'Cameras & Audio' },
+    { id: 'cat-ev', name: 'E-Bikes & Scooters' },
+    { id: 'cat-drone', name: 'Drones & Aerial Gear' },
+    { id: 'cat-audio', name: 'Audio & Sound Systems' },
+    { id: 'cat-tools', name: 'Tools & Construction Equipment' },
+    { id: 'cat-event', name: 'Event & Party Supplies' },
+    { id: 'cat-outdoor', name: 'Outdoor & Camping Gear' },
+    { id: 'cat-gaming', name: 'Gaming & VR Tech' },
+  ];
 
-  const categoriesList = apiCategories.length > 0
-    ? apiCategories.map((c) => ({ id: c.id, name: c.name, label: c.name }))
-    : [
-        { id: 'cat-cameras', name: 'Cameras & Audio', label: 'Cameras & Audio' },
-        { id: 'cat-ev', name: 'E-Bikes & Scooters', label: 'E-Bikes & Scooters' },
-        { id: 'cat-drones', name: 'Drones & Aerial Gear', label: 'Drones & Aerial Gear' },
-        { id: 'cat-sound', name: 'Audio & Sound Systems', label: 'Audio & Sound Systems' },
-        { id: 'cat-tools', name: 'Tools & Construction Equipment', label: 'Tools & Construction Equipment' },
-        { id: 'cat-event', name: 'Event & Party Supplies', label: 'Event & Party Supplies' },
-      ];
+  const categoriesToDisplay = categoriesList.length > 0 ? categoriesList : defaultCategories;
 
-  const toggleCategory = (catIdentifier: string) => {
-    if (selectedCategories.includes(catIdentifier)) {
-      onCategoryChange(selectedCategories.filter((c) => c !== catIdentifier));
+  const toggleCategory = (catId: string) => {
+    if (selectedCategories.includes(catId)) {
+      onCategoryChange(selectedCategories.filter((c) => c !== catId));
     } else {
-      onCategoryChange([...selectedCategories, catIdentifier]);
+      onCategoryChange([...selectedCategories, catId]);
     }
   };
 
@@ -74,19 +84,19 @@ export const RentalsSidebarFilter: React.FC<RentalsSidebarFilterProps> = ({
           onClick={() => setOpenCategory(!openCategory)}
           className="w-full flex items-center justify-between text-xs font-extrabold text-neutral-900 tracking-wide uppercase text-left"
         >
-          <span>Category</span>
+          <div className="flex items-center gap-1.5">
+            <Tag className="w-3.5 h-3.5 text-neutral-500" />
+            <span>Category</span>
+          </div>
           <ChevronDown
             className={`w-4 h-4 text-neutral-500 transition-transform ${openCategory ? '' : '-rotate-90'}`}
           />
         </button>
 
         {openCategory && (
-          <div className="space-y-2.5 pt-1">
-            {categoriesList.map((cat) => {
-              const isChecked =
-                selectedCategories.includes(cat.id) ||
-                selectedCategories.includes(cat.name) ||
-                selectedCategories.some((sc) => sc.toLowerCase() === cat.name.toLowerCase());
+          <div className="space-y-2 pt-1 max-h-60 overflow-y-auto pr-1">
+            {categoriesToDisplay.map((cat) => {
+              const isChecked = selectedCategories.includes(cat.id);
               return (
                 <label
                   key={cat.id}
@@ -98,13 +108,59 @@ export const RentalsSidebarFilter: React.FC<RentalsSidebarFilterProps> = ({
                     onChange={() => toggleCategory(cat.id)}
                     className="w-4 h-4 rounded border-neutral-300 text-black focus:ring-black cursor-pointer accent-black"
                   />
-                  <span>{cat.label}</span>
+                  <span className="truncate">{cat.name}</span>
                 </label>
               );
             })}
           </div>
         )}
       </div>
+
+      {/* Vendor Filter Group */}
+      {vendorsList.length > 0 && (
+        <div className="space-y-3 pb-6 border-b border-neutral-200/80">
+          <button
+            onClick={() => setOpenVendor(!openVendor)}
+            className="w-full flex items-center justify-between text-xs font-extrabold text-neutral-900 tracking-wide uppercase text-left"
+          >
+            <div className="flex items-center gap-1.5">
+              <Store className="w-3.5 h-3.5 text-neutral-500" />
+              <span>Rental Company</span>
+            </div>
+            <ChevronDown
+              className={`w-4 h-4 text-neutral-500 transition-transform ${openVendor ? '' : '-rotate-90'}`}
+            />
+          </button>
+
+          {openVendor && (
+            <div className="space-y-1.5 pt-1">
+              <button
+                onClick={() => onVendorChange('')}
+                className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  selectedVendorId === ''
+                    ? 'bg-neutral-900 text-white'
+                    : 'text-neutral-700 hover:bg-neutral-200/60'
+                }`}
+              >
+                All Vendor Stores
+              </button>
+              {vendorsList.map((v) => (
+                <button
+                  key={v.id}
+                  onClick={() => onVendorChange(v.id)}
+                  className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-bold transition-all truncate ${
+                    selectedVendorId === v.id
+                      ? 'bg-neutral-900 text-white'
+                      : 'text-neutral-700 hover:bg-neutral-200/60'
+                  }`}
+                >
+                  {v.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Rental Duration Filter Group */}
       <div className="space-y-3 pb-6 border-b border-neutral-200/80">
@@ -157,7 +213,7 @@ export const RentalsSidebarFilter: React.FC<RentalsSidebarFilterProps> = ({
             <input
               type="range"
               min={500}
-              max={20000}
+              max={50000}
               step={500}
               value={maxPrice}
               onChange={(e) => onMaxPriceChange(Number(e.target.value))}
@@ -165,8 +221,8 @@ export const RentalsSidebarFilter: React.FC<RentalsSidebarFilterProps> = ({
             />
             <div className="flex items-center justify-between text-xs text-neutral-500 font-bold">
               <span>₹500</span>
-              <span className="text-neutral-900 font-extrabold">Max: ₹{maxPrice}+</span>
-              <span>₹20,000+</span>
+              <span className="text-neutral-900 font-extrabold">Max: ₹{maxPrice.toLocaleString()}+</span>
+              <span>₹50,000+</span>
             </div>
           </div>
         )}

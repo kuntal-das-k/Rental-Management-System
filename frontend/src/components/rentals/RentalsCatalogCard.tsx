@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, ArrowRight } from 'lucide-react';
+import { Heart, ArrowRight, Store } from 'lucide-react';
 import { api } from '../../api/client';
 import { useCartStore } from '../../store/useCartStore';
 import { Product } from '../../types';
@@ -15,6 +15,9 @@ export interface CatalogCardProps {
   isNew?: boolean;
   colorSwatches?: string[]; // hex codes or color names
   productRaw?: Product;
+  vendorName?: string;
+  vendorLogo?: string;
+  categoryName?: string;
 }
 
 export const RentalsCatalogCard: React.FC<CatalogCardProps> = ({
@@ -27,9 +30,16 @@ export const RentalsCatalogCard: React.FC<CatalogCardProps> = ({
   isNew = false,
   colorSwatches,
   productRaw,
+  vendorName,
+  vendorLogo,
+  categoryName,
 }) => {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const addItem = useCartStore((state) => state.addItem);
+
+  const displayVendorName = vendorName || (productRaw as any)?.vendor?.company_name || 'Verified Vendor';
+  const displayVendorLogo = vendorLogo || (productRaw as any)?.vendor?.logo_url;
+  const displayCategory = categoryName || (productRaw as any)?.category?.name;
 
   const handleRent = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -85,13 +95,18 @@ export const RentalsCatalogCard: React.FC<CatalogCardProps> = ({
 
         {/* Top Badges */}
         <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
-          {isNew ? (
-            <span className="bg-emerald-200/90 text-emerald-950 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-              NEW
-            </span>
-          ) : (
-            <span />
-          )}
+          <div className="flex items-center gap-1.5">
+            {isNew && (
+              <span className="bg-emerald-200/90 text-emerald-950 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                NEW
+              </span>
+            )}
+            {displayCategory && (
+              <span className="bg-slate-900/80 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full backdrop-blur-xs truncate max-w-[120px]">
+                {displayCategory}
+              </span>
+            )}
+          </div>
 
           <button
             onClick={toggleWishlist}
@@ -106,6 +121,16 @@ export const RentalsCatalogCard: React.FC<CatalogCardProps> = ({
       {/* Card Body */}
       <div className="pt-4 px-1 space-y-3 flex-1 flex flex-col justify-between">
         <div className="space-y-1.5">
+          {/* Vendor Badge */}
+          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-neutral-500">
+            {displayVendorLogo ? (
+              <img src={displayVendorLogo} alt={displayVendorName} className="w-4 h-4 rounded-full object-cover" />
+            ) : (
+              <Store className="w-3.5 h-3.5 text-neutral-400" />
+            )}
+            <span className="truncate text-neutral-700 font-bold">{displayVendorName}</span>
+          </div>
+
           <h3 className="text-sm font-bold text-neutral-900 group-hover:text-black line-clamp-1">
             {title}
           </h3>
@@ -152,3 +177,4 @@ export const RentalsCatalogCard: React.FC<CatalogCardProps> = ({
     </Link>
   );
 };
+
