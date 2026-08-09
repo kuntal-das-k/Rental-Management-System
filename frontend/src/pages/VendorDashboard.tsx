@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/client';
 import { useAuthStore } from '../store/useAuthStore';
@@ -51,8 +51,22 @@ import {
 import { format, isToday } from 'date-fns';
 
 export const VendorDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const { user, logout, updateUser } = useAuthStore();
   const queryClient = useQueryClient();
+
+  const handleLogout = () => {
+    logout();
+    queryClient.clear();
+    navigate('/login');
+    window.location.href = '/login';
+  };
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
 
   // Active Navigation Tab
   const [activeTab, setActiveTab] = useState<
@@ -404,6 +418,14 @@ export const VendorDashboard: React.FC = () => {
             <HelpCircle className="w-4 h-4" />
             <span>Support</span>
           </button>
+
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-red-600 hover:bg-red-50 hover:text-red-700"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Sign Out</span>
+          </button>
         </div>
       </aside>
 
@@ -561,7 +583,7 @@ export const VendorDashboard: React.FC = () => {
                       <button
                         onClick={() => {
                           setIsUserMenuOpen(false);
-                          logout();
+                          handleLogout();
                         }}
                         className="w-full text-left px-3.5 py-2.5 rounded-xl font-bold text-xs text-rose-600 hover:bg-rose-50 flex items-center gap-2 transition-colors border-t border-slate-100 mt-1 pt-2"
                       >
