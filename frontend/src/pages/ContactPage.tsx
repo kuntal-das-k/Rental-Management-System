@@ -4,9 +4,9 @@ import { NavbarHeader } from '../components/home/NavbarHeader';
 import { api } from '../api/client';
 import { Mail, Phone, MapPin, Clock, CheckCircle2, Send, Loader2 } from 'lucide-react';
 
-const EMAILJS_SERVICE_ID = 'service_oq4bk1e';
-const EMAILJS_TEMPLATE_ID = 'template_d58ad5d';
-const EMAILJS_PUBLIC_KEY = 'jFrRS_CiaciugTvMz';
+const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID || 'service_oq4bk1e';
+const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || 'template_d58ad5d';
+const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || 'jFrRS_CiaciugTvMz';
 
 export const ContactPage: React.FC = () => {
   const location = useLocation();
