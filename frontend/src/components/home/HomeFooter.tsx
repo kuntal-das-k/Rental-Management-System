@@ -52,6 +52,9 @@ export const HomeFooter: React.FC = () => {
             <span className="text-xs font-bold uppercase tracking-wider text-neutral-900 block">Support</span>
             <ul className="space-y-2 text-xs font-medium text-neutral-500">
               <li>
+                <Link to="/contact" className="hover:text-neutral-900 transition-colors">Contact Support</Link>
+              </li>
+              <li>
                 <Link to="/how-it-works" className="hover:text-neutral-900 transition-colors">Help Center</Link>
               </li>
               <li>
