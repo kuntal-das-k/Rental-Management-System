@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { NavbarHeader } from '../components/home/NavbarHeader';
 import { api } from '../api/client';
+import { config } from '../config';
 import { Mail, Phone, MapPin, Clock, CheckCircle2, Send, Loader2 } from 'lucide-react';
 import emailjs from '@emailjs/browser';
 
-const EMAILJS_SERVICE_ID = 'service_oq4bk1e';
-const EMAILJS_TEMPLATE_ID = 'template_d58ad5d';
-const EMAILJS_PUBLIC_KEY = 'jFrRS_CiaciugTvMz';
+const EMAILJS_SERVICE_ID = config.emailjs.serviceId;
+const EMAILJS_TEMPLATE_ID = config.emailjs.templateId;
+const EMAILJS_PUBLIC_KEY = config.emailjs.publicKey;
 
 export const ContactPage: React.FC = () => {
   const location = useLocation();
@@ -107,7 +108,7 @@ export const ContactPage: React.FC = () => {
               <h2 className="text-lg font-semibold text-slate-900 tracking-tight">
                 Concierge Directory
               </h2>
-              
+
               <div className="space-y-5 text-xs sm:text-sm">
                 <div className="flex items-start space-x-3.5">
                   <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-slate-900 shadow-sm shrink-0 mt-0.5">
