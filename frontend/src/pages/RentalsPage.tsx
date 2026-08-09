@@ -15,16 +15,30 @@ export const RentalsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialSearch = searchParams.get('search') || '';
   const initialCategory = searchParams.get('category') || searchParams.get('categoryId') || searchParams.get('cat') || '';
+  const initialDuration = searchParams.get('duration') || 'Daily';
 
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
     initialCategory ? [initialCategory] : []
   );
   const [selectedVendorId, setSelectedVendorId] = useState<string>('');
-  const [selectedDuration, setSelectedDuration] = useState('Daily');
+  const [selectedDuration, setSelectedDuration] = useState(initialDuration);
   const [maxPrice, setMaxPrice] = useState(50000);
   const [sortOption, setSortOption] = useState('Recommended');
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Sync state whenever URL search parameters change
+  React.useEffect(() => {
+    const q = searchParams.get('search') || '';
+    const dur = searchParams.get('duration') || 'Daily';
+    const cat = searchParams.get('category') || searchParams.get('categoryId') || searchParams.get('cat') || '';
+
+    setSearchQuery(q);
+    setSelectedDuration(dur);
+    if (cat) {
+      setSelectedCategories([cat]);
+    }
+  }, [searchParams]);
 
   // Fetch real categories
   const { data: dbCategories = [] } = useQuery<CategoryOption[]>({
