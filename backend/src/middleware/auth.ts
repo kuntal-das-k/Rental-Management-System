@@ -20,11 +20,15 @@ export async function authenticateToken(req: AuthenticatedRequest, res: Response
     const decoded = verifyAccessToken(token);
     req.user = decoded;
 
-    // Import prisma client dynamically to verify user active status
+    // Import prisma client dynamically to verify user active status and vendor_profile
     const { prisma } = require('../config');
     const dbUser = await prisma.user.findUnique({
       where: { id: decoded.userId },
-      select: { id: true, is_active: true },
+      select: {
+        id: true,
+        is_active: true,
+        vendor_profile: { select: { id: true } },
+      },
     });
 
     if (!dbUser) {
@@ -39,6 +43,10 @@ export async function authenticateToken(req: AuthenticatedRequest, res: Response
         success: false,
         error: 'Your account has been deactivated by an administrator. Please contact support.',
       });
+    }
+
+    if (dbUser.vendor_profile) {
+      req.user.vendorId = dbUser.vendor_profile.id;
     }
 
     next();

@@ -187,6 +187,7 @@ export const VendorDashboard: React.FC = () => {
       const res = await api.get('/dashboard/metrics');
       return res.data.data;
     },
+    refetchInterval: 3000,
   });
 
   const { data: ordersData = [], refetch: refetchOrders } = useQuery({
@@ -195,6 +196,7 @@ export const VendorDashboard: React.FC = () => {
       const res = await api.get('/orders');
       return (res.data.data as Order[]) || [];
     },
+    refetchInterval: 3000,
   });
 
   const { data: productsData = [], refetch: refetchProducts } = useQuery({

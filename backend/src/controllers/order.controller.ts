@@ -20,7 +20,13 @@ export class OrderController {
       if (user.role === 'CUSTOMER') {
         filters.customerId = user.userId;
       } else if (user.role === 'VENDOR') {
-        filters.vendorId = user.vendorId;
+        let vId = user.vendorId;
+        if (!vId) {
+          const { prisma } = require('../config');
+          const v = await prisma.vendor.findUnique({ where: { user_id: user.userId } });
+          vId = v?.id;
+        }
+        filters.vendorId = vId;
       } else if (user.role === 'ADMIN') {
         if (customerId) filters.customerId = customerId as string;
         if (vendorId) filters.vendorId = vendorId as string;
