@@ -3,12 +3,14 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useCartStore } from '../../store/useCartStore';
 import { useLocationStore } from '../../store/useLocationStore';
-import { ShoppingBag, Heart, LogOut, LayoutDashboard, UserCircle, MapPin, Navigation, Loader2 } from 'lucide-react';
+import { useFilterStore } from '../../store/useFilterStore';
+import { ShoppingBag, Heart, LogOut, LayoutDashboard, UserCircle, MapPin, Navigation, Loader2, Search } from 'lucide-react';
 
 export const NavbarHeader: React.FC = () => {
   const { user, logout } = useAuthStore();
   const cartItems = useCartStore((state) => state.items);
   const { city, pincode, isDetecting, detectGPSLocation } = useLocationStore();
+  const { searchQuery, setSearchQuery } = useFilterStore();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -51,8 +53,26 @@ export const NavbarHeader: React.FC = () => {
           </button>
         </div>
 
+        {/* Global Search Bar */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            navigate(`/rentals?search=${encodeURIComponent(searchQuery)}`);
+          }}
+          className="relative hidden lg:flex items-center max-w-xs w-full"
+        >
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search 300+ real products..."
+            className="w-full bg-neutral-100 border border-neutral-200 text-xs text-neutral-900 placeholder-neutral-400 rounded-full pl-9 pr-4 py-2 focus:outline-none focus:border-black font-medium transition-all"
+          />
+        </form>
+
         {/* Center Nav Links */}
-        <nav className="hidden md:flex items-center gap-8">
+        <nav className="hidden md:flex items-center gap-6">
           {navLinks.map((link) => {
             const isActive = location.pathname === link.path;
             return (

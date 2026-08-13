@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
-import { Search, ChevronDown } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { api } from '../api/client';
 import { Product } from '../types';
+import { useFilterStore } from '../store/useFilterStore';
 
 import { NavbarHeader } from '../components/home/NavbarHeader';
 import { RentalsSidebarFilter, CategoryOption, VendorOption } from '../components/rentals/RentalsSidebarFilter';
@@ -13,34 +14,27 @@ import { HomeFooter } from '../components/home/HomeFooter';
 
 export const RentalsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialSearch = searchParams.get('search') || '';
-  const initialCategory = searchParams.get('category') || searchParams.get('categoryId') || searchParams.get('cat') || '';
-  const initialDuration = searchParams.get('duration') || 'Daily';
-
-  const [searchQuery, setSearchQuery] = useState(initialSearch);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(
-    initialCategory ? [initialCategory] : []
-  );
-  const [selectedVendorId, setSelectedVendorId] = useState<string>('');
-  const [selectedDuration, setSelectedDuration] = useState(initialDuration);
-  const [maxPrice, setMaxPrice] = useState(50000);
-  const [sortOption, setSortOption] = useState('Recommended');
+  const filterStore = useFilterStore();
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Sync state whenever URL search parameters change
-  React.useEffect(() => {
+  // Sync URL search parameters to global filter store on load or navigation change
+  useEffect(() => {
     const q = searchParams.get('search') || '';
-    const dur = searchParams.get('duration') || 'Daily';
     const cat = searchParams.get('category') || searchParams.get('categoryId') || searchParams.get('cat') || '';
+    const dur = searchParams.get('duration') || 'Daily';
+    const maxP = searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : 50000;
+    const sort = searchParams.get('sort') || 'Recommended';
 
-    setSearchQuery(q);
-    setSelectedDuration(dur);
-    if (cat) {
-      setSelectedCategories([cat]);
-    }
+    filterStore.setAllFilters({
+      searchQuery: q,
+      selectedCategories: cat ? [cat] : filterStore.selectedCategories,
+      selectedDuration: dur,
+      maxPrice: maxP,
+      sortOption: sort,
+    });
   }, [searchParams]);
 
-  // Fetch real categories
+  // Fetch categories
   const { data: dbCategories = [] } = useQuery<CategoryOption[]>({
     queryKey: ['rentals-categories'],
     queryFn: async () => {
@@ -49,26 +43,29 @@ export const RentalsPage: React.FC = () => {
     },
   });
 
-  // Fetch real API products with pagination
+  // Fetch API products with server-side filtering & pagination over 300+ items
   const { data: apiResponse, isLoading } = useQuery({
     queryKey: [
       'rentals-catalog-products',
       currentPage,
-      searchQuery,
-      selectedVendorId,
-      selectedCategories,
-      sortOption,
+      filterStore.searchQuery,
+      filterStore.selectedVendorId,
+      filterStore.selectedCategories,
+      filterStore.maxPrice,
+      filterStore.sortOption,
     ],
     queryFn: async () => {
-      const catParam = selectedCategories.length > 0 ? selectedCategories[0] : undefined;
+      const catParam = filterStore.selectedCategories.length > 0 ? filterStore.selectedCategories[0] : undefined;
       const res = await api.get('/products', {
         params: {
           isPublished: true,
           page: currentPage,
           limit: 12,
-          search: searchQuery || undefined,
-          vendorId: selectedVendorId || undefined,
+          search: filterStore.searchQuery || undefined,
+          vendorId: filterStore.selectedVendorId || undefined,
           categoryId: catParam || undefined,
+          maxPrice: filterStore.maxPrice < 50000 ? filterStore.maxPrice : undefined,
+          sortBy: filterStore.sortOption,
         },
       });
       return res.data;
@@ -78,7 +75,7 @@ export const RentalsPage: React.FC = () => {
   const apiProducts: Product[] = apiResponse?.data || [];
   const meta = apiResponse?.meta || { total: apiProducts.length, page: 1, limit: 12, totalPages: 1 };
 
-  // Build vendors list dynamically from current catalog response for filtering
+  // Build vendors list dynamically from current response or system
   const vendorsList: VendorOption[] = useMemo(() => {
     const map = new Map<string, string>();
     apiProducts.forEach((p) => {
@@ -89,7 +86,7 @@ export const RentalsPage: React.FC = () => {
     return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
   }, [apiProducts]);
 
-  // Combine or format items for cards
+  // Format cards
   const catalogCards: CatalogCardProps[] = useMemo(() => {
     return apiProducts
       .filter((p) => p.product_type !== 'SERVICE')
@@ -98,7 +95,7 @@ export const RentalsPage: React.FC = () => {
         title: p.name,
         description: p.description || 'Curated high-end rental item for your lifestyle requirements.',
         price: p.sales_price || 45,
-        billingCycle: selectedDuration === 'Monthly' ? '/ month' : '/ day',
+        billingCycle: filterStore.selectedDuration === 'Monthly' ? '/ month' : '/ day',
         isNew: idx % 2 === 0,
         imageUrl: p.image_urls?.[0] || 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80',
         vendorName: (p as any).vendor?.company_name || 'Verified Vendor',
@@ -106,27 +103,10 @@ export const RentalsPage: React.FC = () => {
         categoryName: (p as any).category?.name,
         productRaw: p,
       }));
-  }, [apiProducts, selectedDuration]);
-
-  // Client side secondary price filter & sorting
-  const filteredCards = useMemo(() => {
-    let result = catalogCards.filter((card) => card.price <= maxPrice);
-
-    if (sortOption === 'PriceLowHigh') {
-      result.sort((a, b) => a.price - b.price);
-    } else if (sortOption === 'PriceHighLow') {
-      result.sort((a, b) => b.price - a.price);
-    }
-
-    return result;
-  }, [catalogCards, maxPrice, sortOption]);
+  }, [apiProducts, filterStore.selectedDuration]);
 
   const handleResetFilters = () => {
-    setSearchQuery('');
-    setSelectedCategories([]);
-    setSelectedVendorId('');
-    setSelectedDuration('Daily');
-    setMaxPrice(50000);
+    filterStore.resetFilters();
     setCurrentPage(1);
     setSearchParams({});
   };
@@ -141,20 +121,23 @@ export const RentalsPage: React.FC = () => {
         <div className="flex flex-col lg:flex-row gap-12 items-start">
           {/* Left Sidebar Filter Panel */}
           <RentalsSidebarFilter
-            selectedCategories={selectedCategories}
+            selectedCategories={filterStore.selectedCategories}
             onCategoryChange={(cats) => {
-              setSelectedCategories(cats);
+              filterStore.setSelectedCategories(cats);
               setCurrentPage(1);
             }}
-            selectedVendorId={selectedVendorId}
+            selectedVendorId={filterStore.selectedVendorId}
             onVendorChange={(vId) => {
-              setSelectedVendorId(vId);
+              filterStore.setSelectedVendorId(vId);
               setCurrentPage(1);
             }}
-            selectedDuration={selectedDuration}
-            onDurationChange={setSelectedDuration}
-            maxPrice={maxPrice}
-            onMaxPriceChange={setMaxPrice}
+            selectedDuration={filterStore.selectedDuration}
+            onDurationChange={filterStore.setSelectedDuration}
+            maxPrice={filterStore.maxPrice}
+            onMaxPriceChange={(price) => {
+              filterStore.setPriceRange(0, price);
+              setCurrentPage(1);
+            }}
             categoriesList={dbCategories}
             vendorsList={vendorsList}
             onReset={handleResetFilters}
@@ -169,7 +152,7 @@ export const RentalsPage: React.FC = () => {
                   Browse Rental Products
                 </h1>
                 <p className="text-xs text-neutral-500 font-medium mt-0.5">
-                  Showing {filteredCards.length} of {meta.total} vendor-listed items available for instant booking.
+                  Showing {catalogCards.length} of {meta.total} vendor-listed items available for instant booking.
                 </p>
               </div>
 
@@ -180,9 +163,9 @@ export const RentalsPage: React.FC = () => {
                   <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400" />
                   <input
                     type="text"
-                    value={searchQuery}
+                    value={filterStore.searchQuery}
                     onChange={(e) => {
-                      setSearchQuery(e.target.value);
+                      filterStore.setSearchQuery(e.target.value);
                       setCurrentPage(1);
                     }}
                     placeholder="Search gear, bikes, cameras..."
@@ -193,15 +176,18 @@ export const RentalsPage: React.FC = () => {
                 {/* Sort Dropdown */}
                 <div className="relative">
                   <select
-                    value={sortOption}
-                    onChange={(e) => setSortOption(e.target.value)}
+                    value={filterStore.sortOption}
+                    onChange={(e) => {
+                      filterStore.setSortOption(e.target.value);
+                      setCurrentPage(1);
+                    }}
                     className="bg-white border border-neutral-200/80 rounded-full pl-4 pr-8 py-2 text-xs font-semibold text-neutral-800 shadow-sm appearance-none focus:outline-none cursor-pointer"
                   >
                     <option value="Recommended">Recommended</option>
                     <option value="PriceLowHigh">Price: Low to High</option>
                     <option value="PriceHighLow">Price: High to Low</option>
+                    <option value="Newest">Newest Arrivals</option>
                   </select>
-                  <ChevronDown className="w-3.5 h-3.5 text-neutral-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
               </div>
             </div>
@@ -213,9 +199,9 @@ export const RentalsPage: React.FC = () => {
                   <div key={n} className="h-80 rounded-3xl bg-neutral-200/60 animate-pulse" />
                 ))}
               </div>
-            ) : filteredCards.length > 0 ? (
+            ) : catalogCards.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredCards.map((card) => (
+                {catalogCards.map((card) => (
                   <RentalsCatalogCard key={card.id} {...card} />
                 ))}
               </div>

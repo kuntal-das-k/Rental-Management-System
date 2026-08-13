@@ -23,6 +23,9 @@ export class ProductRepository {
     productType?: ProductType;
     isPublished?: boolean;
     search?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    sortBy?: string;
     page?: number;
     limit?: number;
   }) {
@@ -36,12 +39,27 @@ export class ProductRepository {
     if (filters.productType) where.product_type = filters.productType;
     if (typeof filters.isPublished === 'boolean') where.is_published = filters.isPublished;
 
+    if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
+      where.sales_price = {};
+      if (filters.minPrice !== undefined) where.sales_price.gte = filters.minPrice;
+      if (filters.maxPrice !== undefined) where.sales_price.lte = filters.maxPrice;
+    }
+
     if (filters.search) {
       where.OR = [
         { name: { contains: filters.search } },
         { description: { contains: filters.search } },
         { sku: { contains: filters.search } },
       ];
+    }
+
+    let orderBy: any = { created_at: 'desc' };
+    if (filters.sortBy === 'PriceLowHigh' || filters.sortBy === 'price_asc') {
+      orderBy = { sales_price: 'asc' };
+    } else if (filters.sortBy === 'PriceHighLow' || filters.sortBy === 'price_desc') {
+      orderBy = { sales_price: 'desc' };
+    } else if (filters.sortBy === 'Newest' || filters.sortBy === 'newest') {
+      orderBy = { created_at: 'desc' };
     }
 
     const [rawProducts, total] = await Promise.all([
@@ -60,7 +78,7 @@ export class ProductRepository {
             },
           },
         },
-        orderBy: { created_at: 'desc' },
+        orderBy,
       }),
       prisma.product.count({ where }),
     ]);

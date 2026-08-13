@@ -7,13 +7,16 @@ const productService = new ProductService();
 export class ProductController {
   async getProducts(req: AuthenticatedRequest, res: Response) {
     try {
-      const { vendorId, categoryId, productType, isPublished, search, page, limit } = req.query;
+      const { vendorId, categoryId, productType, isPublished, search, minPrice, maxPrice, sortBy, page, limit } = req.query;
       const filters = {
         vendorId: vendorId as string,
         categoryId: categoryId as string,
         productType: productType as any,
         isPublished: isPublished !== undefined ? isPublished === 'true' : undefined,
         search: search as string,
+        minPrice: minPrice ? parseFloat(minPrice as string) : undefined,
+        maxPrice: maxPrice ? parseFloat(maxPrice as string) : undefined,
+        sortBy: sortBy as string,
         page: page ? parseInt(page as string, 10) : 1,
         limit: limit ? parseInt(limit as string, 10) : 20,
       };

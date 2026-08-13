@@ -3,17 +3,25 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { ShoppingBag, Heart, User as UserIcon, LayoutDashboard, LogOut, ShieldCheck, Search, UserCircle, HelpCircle } from 'lucide-react';
 import { useAuthStore } from '../store/useAuthStore';
 import { useCartStore } from '../store/useCartStore';
+import { useFilterStore } from '../store/useFilterStore';
 
 interface NavbarProps {
   searchQuery?: string;
   onSearchChange?: (q: string) => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ searchQuery, onSearchChange }) => {
+export const Navbar: React.FC<NavbarProps> = ({ searchQuery: propQuery, onSearchChange: propChange }) => {
   const { user, logout } = useAuthStore();
   const cartItems = useCartStore((state) => state.items);
+  const globalFilter = useFilterStore();
   const navigate = useNavigate();
   const location = useLocation();
+
+  const activeQuery = propQuery !== undefined ? propQuery : globalFilter.searchQuery;
+  const handleQueryChange = (q: string) => {
+    if (propChange) propChange(q);
+    globalFilter.setSearchQuery(q);
+  };
 
   const handleLogout = () => {
     logout();
@@ -41,18 +49,22 @@ export const Navbar: React.FC<NavbarProps> = ({ searchQuery, onSearchChange }) =
         </Link>
 
         {/* Global Search Bar */}
-        {onSearchChange !== undefined && (
-          <div className="flex-1 max-w-sm relative hidden md:block">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              value={searchQuery || ''}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search cameras, EV bikes, gear by name..."
-              className="w-full bg-slate-900/80 border border-slate-700/80 rounded-full pl-9 pr-4 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
-            />
-          </div>
-        )}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            navigate(`/rentals?search=${encodeURIComponent(activeQuery)}`);
+          }}
+          className="flex-1 max-w-sm relative hidden md:block"
+        >
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <input
+            type="text"
+            value={activeQuery}
+            onChange={(e) => handleQueryChange(e.target.value)}
+            placeholder="Search cameras, EV bikes, 300+ items..."
+            className="w-full bg-slate-900/80 border border-slate-700/80 rounded-full pl-9 pr-4 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
+          />
+        </form>
 
         {/* Main Nav Links */}
         <nav className="flex items-center gap-1 sm:gap-2 md:gap-4">
